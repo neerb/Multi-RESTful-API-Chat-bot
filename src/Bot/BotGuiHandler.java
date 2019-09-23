@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 
 /*
@@ -12,7 +14,7 @@ import java.awt.event.WindowEvent;
  *  It can also send administrative messages to the user.
  *  
  */
-public class BotGuiHandler extends JFrame implements ActionListener
+public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 {
 	private BreenBot mainBot;
 	GetBotServerAndNamePrompt leadPrompt;
@@ -94,6 +96,7 @@ public class BotGuiHandler extends JFrame implements ActionListener
 		adminMessageField.setFont(chatFont);
 		//adminMessageField.setColumns(50);
 		adminMessageField.setHorizontalAlignment(JTextField.LEFT);
+		adminMessageField.addKeyListener(this);
 		
 		sendAdminMessageField = new JButton();
 		sendAdminMessageField.setText("Send Administrator Message");
@@ -155,6 +158,21 @@ public class BotGuiHandler extends JFrame implements ActionListener
 		
 		verticalBar.setValue(verticalBar.getMaximum());
 	}
+	
+	private void sendAdminMessageFromField()
+	{
+		String time = new java.util.Date().toString();
+		
+		if(!adminMessageField.getText().isEmpty())
+		{
+			String message = adminMessageField.getText();
+
+			mainBot.sendMessage(mainBot.getCurrentChannel(), message);
+
+			adminMessageField.setText("");
+			appendToChat(time + " - " + mainBot.getName() +  ": " + message);
+		}
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) 
@@ -163,15 +181,7 @@ public class BotGuiHandler extends JFrame implements ActionListener
 		
 		if(arg0.getSource() == sendAdminMessageField)
 		{
-			if(!adminMessageField.getText().isEmpty())
-			{
-				String message = adminMessageField.getText();
-
-				mainBot.sendMessage(mainBot.getCurrentChannel(), message);
-
-				adminMessageField.setText("");
-				appendToChat(time + " - " + mainBot.getName() +  ": " + message);
-			}
+			sendAdminMessageFromField();
 		}
 		else if(arg0.getSource() == connectBot)
 		{			
@@ -218,5 +228,26 @@ public class BotGuiHandler extends JFrame implements ActionListener
 		{
 			this.mainBot.setEnabled(enableCommands.isSelected());
 		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) 
+	{
+
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) 
+	{
+		if(e.getSource() == adminMessageField && e.getKeyCode() == KeyEvent.VK_ENTER)
+		{
+			sendAdminMessageFromField();
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) 
+	{
+		
 	}
 }
