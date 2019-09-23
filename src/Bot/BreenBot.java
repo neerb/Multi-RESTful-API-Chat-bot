@@ -3,13 +3,9 @@ import java.io.BufferedReader;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.URL;
-import java.util.Hashtable;
-import java.util.Map;
 
 import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
 
 import org.jibble.pircbot.*;
 
@@ -73,25 +69,16 @@ public class BreenBot extends PircBot
 		this.enabled = val;
 	}
 	
-	public void begin() throws Exception
+	public void setGuiInterface(BotGuiHandler botGui)
 	{
-		guiInterface = new BotGuiHandler(this);
+		this.guiInterface = botGui;
 	}
 	
 	public void connectBot() throws Exception
 	{
-		String time = new java.util.Date().toString();
-
-		guiInterface.appendToChat(time + ": Bot initializing...");
-		
 		setVerbose(true);
 		connect(this.server);
 		joinChannel(this.channel);
-		
-		time = new java.util.Date().toString();
-		
-		guiInterface.appendToChat(time + ": Connected.");
-		guiInterface.enableUtilities();
 	}
 	
 	/*

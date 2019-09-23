@@ -4,10 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 
-public class GetBotServerAndNamePrompt extends JFrame
+public class GetBotServerAndNamePrompt extends JFrame implements ActionListener
 {
 	private BreenBot bot;
+	private BotGuiHandler guiInterface;
 	
 	private JPanel panel;
 	private JLabel enterData;
@@ -22,7 +24,6 @@ public class GetBotServerAndNamePrompt extends JFrame
 	GetBotServerAndNamePrompt()
 	{		
 		int sizeSquared = 250;
-		// Create bot with default parameters
 		
 		setTitle("New Bot");
 		panel = new JPanel();
@@ -36,7 +37,6 @@ public class GetBotServerAndNamePrompt extends JFrame
 		channelName = new JTextField();
 		channelName.setText("#testServer0100");
 		submit = new JButton();
-		//layout = new BoxLayout(panel, BoxLayout.Y_AXIS);
 		layout = new GridLayout();
 		layout.setColumns(1);
 		layout.setRows(6);
@@ -47,9 +47,7 @@ public class GetBotServerAndNamePrompt extends JFrame
 		panel.setLayout(layout);
 		
 		submit.setText("Connect Bot");
-		
-		add(panel, SwingConstants.CENTER);		
-		
+				
 		enterData.setAlignmentX(Component.CENTER_ALIGNMENT);
 		labelName.setAlignmentX(Component.CENTER_ALIGNMENT);
 		botName.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -64,36 +62,69 @@ public class GetBotServerAndNamePrompt extends JFrame
 		panel.add(channelName);
 		panel.add(submit);
 		
-		submit.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				String name = botName.getText();
-				String channel = channelName.getText();
-				String server = "orwell.freenode.net";
-				
-				bot = new BreenBot(name, channel, server);
-				
-				if(!name.isEmpty() && !channel.isEmpty() && !server.isEmpty())
-				{
-					setVisible(false);
-
-					try
-					{
-						bot.begin();
-						bot.connectBot();
-					}
-					catch(Exception ex)
-					{
-						System.out.println(ex.getMessage());
-					}
-				}
-
-			}
-		});
+		submit.addActionListener(this);
+		
+		add(panel, SwingConstants.CENTER);		
 		
 		setResizable(false);
 		setLocationRelativeTo(null);
+		toFront();
 		setVisible(true);
+	}
+	
+	public void reset()
+	{
+		setResizable(false);
+		setLocationRelativeTo(null);
+		toFront();
+		setVisible(true);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent arg0) 
+	{
+		if(arg0.getSource() == submit)
+		{
+			if(!botName.getText().isEmpty() && !channelName.getText().isEmpty())
+			{
+				try
+				{
+					String name = botName.getText();
+					String channel = channelName.getText();
+					String server = "orwell.freenode.net";
+
+					this.bot = new BreenBot(name, channel, server);
+					this.guiInterface = new BotGuiHandler(this.bot, this);
+					
+					this.bot.setGuiInterface(this.guiInterface);
+
+					setVisible(false);
+					String time = new java.util.Date().toString();
+					guiInterface.appendToChat(time + ": Bot initializing...");
+				}
+				catch(Exception ex)
+				{
+					JOptionPane.showMessageDialog(null, ex.getMessage());
+					
+					String time = new java.util.Date().toString();
+					guiInterface.appendToChat(time + ": " + ex.getMessage());
+					
+					setLocationRelativeTo(null);
+					setVisible(true);
+					toFront();
+					repaint();
+				}
+			}
+			else
+			{
+				// Error messages for missing parameters
+				if(botName.getText().isEmpty() && channelName.getText().isEmpty())
+					JOptionPane.showMessageDialog(null, "Bot and channel name are required.");
+				else if(botName.getText().isEmpty())
+					JOptionPane.showMessageDialog(null, "Bot name is required.");
+				else if(channelName.getText().isEmpty())
+					JOptionPane.showMessageDialog(null, "Channel name is required.");
+			}
+		}
 	}
 }

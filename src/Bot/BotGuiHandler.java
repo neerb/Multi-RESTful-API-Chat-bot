@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 
 /*
  *  This class is the admin commands/display for the bot.
@@ -14,6 +15,7 @@ import java.awt.event.ActionListener;
 public class BotGuiHandler extends JFrame implements ActionListener
 {
 	private BreenBot mainBot;
+	GetBotServerAndNamePrompt leadPrompt;
 	
 	private JPanel panelTop;
 	private JPanel panelBottom;
@@ -24,15 +26,17 @@ public class BotGuiHandler extends JFrame implements ActionListener
 	private JTextArea chatData;
 	private JScrollPane chatScroller;
 
+	private JButton connectBot;
 	private JTextField adminMessageField;
 	private JButton sendAdminMessageField;
 	private JCheckBox enableCommands;
 	
 	private Font chatFont;
 
-	BotGuiHandler(BreenBot bot)
+	BotGuiHandler(BreenBot bot, GetBotServerAndNamePrompt prompt)
 	{
 		this.mainBot = bot;
+		this.leadPrompt = prompt;
 		
 		// Creation of GUI
 		int width = 1200;
@@ -54,7 +58,7 @@ public class BotGuiHandler extends JFrame implements ActionListener
 		panelTop = new JPanel();
 		panelBottom = new JPanel();
 		
-		setTitle("BreenBot - Admin Controls");
+		setTitle(mainBot.getName() + " - Admin Controls");
 		
 		setSize(width, height);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -64,9 +68,6 @@ public class BotGuiHandler extends JFrame implements ActionListener
 		
 		//panelBottom.setSize(buttonDimension);
 		//panelBottom.setBounds(0, chatDimension.height + 20, buttonDimension.width, buttonDimension.height);
-		
-		add(panelTop, BorderLayout.NORTH);
-		add(panelBottom, BorderLayout.SOUTH);
 		
 		panelTop.setLayout(layoutTop);
 		panelTop.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -103,6 +104,12 @@ public class BotGuiHandler extends JFrame implements ActionListener
 		enableCommands.setText("Enable commands");
 		enableCommands.setSelected(true);
 		panelBottom.add(enableCommands);
+	
+		connectBot = new JButton("Connect");
+		connectBot.addActionListener(this);
+		connectBot.setBackground(Color.RED);
+		connectBot.setForeground(Color.WHITE);
+		panelBottom.add(connectBot);
 		
 		sendAdminMessageField.addActionListener(this);
 		enableCommands.addActionListener(this);
@@ -113,20 +120,26 @@ public class BotGuiHandler extends JFrame implements ActionListener
 		appendToChat("- Please wait...");
 
 		
-		// Disable some utilities until bot has initialized
+		// Disable some utilities until bot has initialized and connected
 		adminMessageField.setEnabled(false);
 		sendAdminMessageField.setEnabled(false);
+		enableCommands.setEnabled(false);
+
+		add(panelTop, BorderLayout.NORTH);
+		add(panelBottom, BorderLayout.SOUTH);
 		
 		pack();
 		setResizable(false);
 		setLocationRelativeTo(null);
+		toFront();
 		setVisible(true);
 	}
 
-	public void enableUtilities()
+	public void setUtilitiesEnabled(boolean val)
 	{
-		adminMessageField.setEnabled(true);
-		sendAdminMessageField.setEnabled(true);
+		adminMessageField.setEnabled(val);
+		sendAdminMessageField.setEnabled(val);
+		enableCommands.setEnabled(val);
 	}
 	
 	private void sendBotMessage(String message)
@@ -146,18 +159,64 @@ public class BotGuiHandler extends JFrame implements ActionListener
 	@Override
 	public void actionPerformed(ActionEvent arg0) 
 	{
+		String time = new java.util.Date().toString();
+		
 		if(arg0.getSource() == sendAdminMessageField)
 		{
-			String message = adminMessageField.getText();
-			String time = new java.util.Date().toString();
+			if(!adminMessageField.getText().isEmpty())
+			{
+				String message = adminMessageField.getText();
 
-			mainBot.sendMessage(mainBot.getCurrentChannel(), message);
-			adminMessageField.setText("");
-			appendToChat(time + " - " + mainBot.getName() +  ": " + message);
+				mainBot.sendMessage(mainBot.getCurrentChannel(), message);
+
+				adminMessageField.setText("");
+				appendToChat(time + " - " + mainBot.getName() +  ": " + message);
+			}
+		}
+		else if(arg0.getSource() == connectBot)
+		{			
+			if(connectBot.getText().equals("Connect"))
+			{
+				try 
+				{
+					this.mainBot.connectBot();
+					setUtilitiesEnabled(true);
+					appendToChat(time + ": Connected");
+					connectBot.setBackground(Color.GREEN);
+					connectBot.setText("Disconnect");
+				} 
+				catch (Exception ex) 
+				{
+					this.leadPrompt.reset();
+					setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+					dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+					JOptionPane.showMessageDialog(null, ex.getMessage());
+					connectBot.setEnabled(true);
+				}
+			}
+			else
+			{
+				try 
+				{
+					this.mainBot.disconnect();
+					setUtilitiesEnabled(false);
+					appendToChat(time + ": Bot disconnected by user");
+					connectBot.setBackground(Color.RED);
+					connectBot.setText("Connect");
+				} 
+				catch (Exception ex) 
+				{
+					this.leadPrompt.reset();
+					setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+					dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+					JOptionPane.showMessageDialog(null, ex.getMessage());
+					connectBot.setEnabled(true);
+				}
+			}
 		}
 		else if(arg0.getSource() == enableCommands)
 		{
-			mainBot.setEnabled(enableCommands.isSelected());
+			this.mainBot.setEnabled(enableCommands.isSelected());
 		}
 	}
 }

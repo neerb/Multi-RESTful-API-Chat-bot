@@ -3,9 +3,7 @@ package Bot;
 public class BotMain 
 {
 	public static void main(String[] args) throws Exception
-	{	
-		// This is a change
-		
+	{			
 		// Bot entry point
 		GetBotServerAndNamePrompt bot = new GetBotServerAndNamePrompt();
 		//bot.begin();
