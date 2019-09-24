@@ -1,9 +1,11 @@
 package Bot;
+import java.awt.List;
 import java.io.BufferedReader;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
 
 import com.google.gson.*;
 
@@ -361,6 +363,55 @@ public class BreenBot extends PircBot
 		return rates;
 	}
 	
+	ArrayList<String> getRepresentativeDataByZipcode(String zipcode) throws Exception
+	{
+		ArrayList<String> returnData = new ArrayList<String>();
+		
+		String urlHalf1 = "https://whoismyrepresentative.com/getall_mems.php?zip=";
+		String urlHalf2 = "&output=json";
+		
+		String url = urlHalf1 + zipcode + urlHalf2;
+		
+		JsonParser parser = new JsonParser();
+		
+		String jsonData = getJsonData(url);
+				
+		JsonElement jsonTree = parser.parse(jsonData);
+		
+		if(jsonTree.isJsonObject())
+		{
+			JsonObject treeObject = jsonTree.getAsJsonObject();
+			
+			JsonElement resultsElement = treeObject.get("results");
+			
+			if(resultsElement.isJsonArray())
+			{
+				JsonArray resultsArray = resultsElement.getAsJsonArray();
+				
+				int count = 0;
+				// Saves three representatives max from json
+				for(int pos = 0; pos < resultsArray.size() && count < 3; pos++)
+				{
+					JsonElement currentElement = resultsArray.get(pos);
+					
+					if(currentElement.isJsonObject()) 
+					{
+						JsonObject currentObject = currentElement.getAsJsonObject();
+						
+						returnData.add(currentObject.get("name").getAsString());
+						returnData.add(currentObject.get("party").getAsString());
+						returnData.add(currentObject.get("phone").getAsString());
+						returnData.add(currentObject.get("link").getAsString());
+						
+						count++;
+					}
+				}				
+			}
+		}
+				
+		return returnData;
+	}
+	
 	String getJsonData(String urlString) throws IOException
 	{
 	    BufferedReader reader = null;
@@ -422,6 +473,11 @@ public class BreenBot extends PircBot
 		return product;
 	}
 
+	/*
+	 * Convert kelvin to fahrenheit
+	 * 
+	 * Parameter: double containing kelvin temperature
+	 */
     double kelvinToFahrenheit(double kelvin)
     {    	
     	return Math.round(((kelvin - 273.15) * (9.0/5.0) + 32) * 100.0) / 100.0;
@@ -463,6 +519,7 @@ public class BreenBot extends PircBot
 	 * 	!distance
 	 * 	!cprice
 	 * 	!exchange
+	 * 	!representative <zipcode>
 	 * 
 	 * Math functions:
 	 * 	!ex
@@ -717,6 +774,52 @@ public class BreenBot extends PircBot
         						"F and the current temperature is " + kelvinToFahrenheit(Double.parseDouble(data[3])) + "F";
         				
         				sendMessageAndAppend(this.channel, weatherDataString);
+        			} 
+        			catch (Exception e) 
+        			{
+        				System.out.println(e.getMessage());
+        			}
+        		}
+        		catch(Exception ex)
+        		{
+        			System.out.println("- Argument " + i + " is not a valid zipcode number");
+        		}
+        	}
+    	}
+    	else if(message.contains("representative"))
+    	{
+    		long potentialZipcode;
+    		
+        	for(int i = 0; i < args.length; i++)
+        	{
+        		try
+        		{
+        			// A potential zipcode to be used
+        			potentialZipcode = Long.parseUnsignedLong(removeSpecialCharacters(args[i]));
+        			
+        			//If valid parse, then print zipcode weather to user
+        			try 
+        			{
+        				String zipToString = Long.toString(potentialZipcode);
+        				
+        				// Handles zipcodes beginning with 0
+        				zipToString = (zipToString.length() == 4 ? "0" : "") + zipToString;
+        				        				
+        				System.out.println(zipToString);
+        				ArrayList<String> representativeDataArray = getRepresentativeDataByZipcode(zipToString);
+        				String representativeDataString = "";
+        				
+        				// Construct return string to user
+        				int num = 1;
+        				for(int pos = 0; pos < representativeDataArray.size(); pos += 4)
+        				{
+        					representativeDataString += "Rep. " + num++ + " = { Name: " + representativeDataArray.get(pos);
+        					representativeDataString += " / Party: " + representativeDataArray.get(pos + 1);
+        					representativeDataString += " / Phone: " + representativeDataArray.get(pos + 2);
+        					representativeDataString += " / Link: " + representativeDataArray.get(pos + 3) + " } ";
+        				}
+        				
+        				sendMessageAndAppend(this.channel, representativeDataString);
         			} 
         			catch (Exception e) 
         			{

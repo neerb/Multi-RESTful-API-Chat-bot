@@ -46,7 +46,7 @@ public class GetBotServerAndNamePrompt extends JFrame implements ActionListener
 		setSize(sizeSquared, sizeSquared);
 		panel.setLayout(layout);
 		
-		submit.setText("Connect Bot");
+		submit.setText("Create new bot");
 				
 		enterData.setAlignmentX(Component.CENTER_ALIGNMENT);
 		labelName.setAlignmentX(Component.CENTER_ALIGNMENT);
