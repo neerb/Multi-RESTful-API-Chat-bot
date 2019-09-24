@@ -7,6 +7,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /*
  *  This class is the admin commands/display for the bot.
@@ -21,19 +24,21 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 	
 	private JPanel panelTop;
 	private JPanel panelBottom;
-	private GridLayout layoutTop;
+	private BoxLayout layoutTop;
 	private GridLayout layoutBottom;
 	
-	private JLabel chatDataLabel;
 	private JTextArea chatData;
 	private JScrollPane chatScroller;
 
 	private JButton connectBot;
 	private JTextField adminMessageField;
 	private JButton sendAdminMessageField;
+	private JButton saveLog;
 	private JCheckBox enableCommands;
+	private JLabel botStatus;
 	
 	private Font chatFont;
+	private Font statusFont;
 
 	BotGuiHandler(BreenBot bot, GetBotServerAndNamePrompt prompt)
 	{
@@ -42,43 +47,42 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		
 		// Creation of GUI
 		int width = 1200;
-		int height = 400;
-		
-		chatFont = new Font(Font.MONOSPACED, Font.PLAIN, 16);
-		
-		Dimension chatDimension = new Dimension(400, height);
-		Dimension buttonDimension = new Dimension(width - chatDimension.width, height);
+		int height = 550;
+			
+		chatFont = new Font(Font.MONOSPACED, Font.PLAIN, 14);
+		statusFont = new Font(Font.MONOSPACED, Font.BOLD, 16);
 
-		layoutTop = new GridLayout();
-		layoutTop.setColumns(1);
-		layoutTop.setRows(1);
-		//layoutTop.setHgap(10);
-		//layoutTop.setVgap(10);
-		
-		layoutBottom = new GridLayout(2, 1);
-		
+		Dimension chatDimension = new Dimension(width, height);
+		Dimension buttonDimension = new Dimension(width - chatDimension.width, height);
+	
 		panelTop = new JPanel();
 		panelBottom = new JPanel();
 		
+		layoutTop = new BoxLayout(panelTop, BoxLayout.Y_AXIS);
+		
+		panelTop.setAlignmentX(Component.CENTER_ALIGNMENT);
+		
+		layoutBottom = new GridLayout(3, 2);
+		layoutBottom.setHgap(10);
+		layoutBottom.setVgap(10);
+		
+		panelBottom.setAlignmentX(Component.CENTER_ALIGNMENT);
+
 		setTitle(mainBot.getName() + " - Admin Controls");
 		
 		setSize(width, height);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
 		//panelTop.setSize(chatDimension);
-		panelTop.setBounds(0, 20, width, height);
+		//panelTop.setBounds(0, 0, width, height);
 		
 		//panelBottom.setSize(buttonDimension);
 		//panelBottom.setBounds(0, chatDimension.height + 20, buttonDimension.width, buttonDimension.height);
 		
 		panelTop.setLayout(layoutTop);
-		panelTop.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		panelTop.setBorder(BorderFactory.createTitledBorder("Live chat (" + this.mainBot.getName() + "):"));
 		panelBottom.setLayout(layoutBottom);
 		panelBottom.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		
-		chatDataLabel = new JLabel("Live Chat:");
-		chatDataLabel.setSize(10, 10);
-		//add(chatDataLabel, BorderLayout.NORTH);
 		
 		chatData = new JTextArea(15, 100);
 		chatData.setEditable(false);
@@ -88,7 +92,6 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		
 		chatScroller = new JScrollPane(chatData);
 		
-		//panelTop.add(chatDataLabel, BorderLayout.WEST);
 		panelTop.add(chatScroller);
 		
 		adminMessageField = new JTextField();
@@ -100,6 +103,7 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		
 		sendAdminMessageField = new JButton();
 		sendAdminMessageField.setText("Send Administrator Message");
+		
 		panelBottom.add(adminMessageField);
 		panelBottom.add(sendAdminMessageField);
 		
@@ -112,16 +116,27 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		connectBot.addActionListener(this);
 		connectBot.setBackground(Color.RED);
 		connectBot.setForeground(Color.WHITE);
+		connectBot.setFont(statusFont);
+				
+		botStatus = new JLabel("Bot Status: Disconnected");
+		botStatus.setFont(statusFont);
+		botStatus.setForeground(Color.RED);
+		
+		panelBottom.add(botStatus);
+		
+		
+		saveLog = new JButton("Save this chat log");
+		panelBottom.add(saveLog);
 		panelBottom.add(connectBot);
 		
 		sendAdminMessageField.addActionListener(this);
 		enableCommands.addActionListener(this);
+		saveLog.addActionListener(this);
 		
 		// User message
 		appendToChat("***New Bot Created...****");
 		appendToChat("- Initialization process beginning...");
 		appendToChat("- Please wait...");
-
 		
 		// Disable some utilities until bot has initialized and connected
 		adminMessageField.setEnabled(false);
@@ -130,7 +145,7 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 
 		add(panelTop, BorderLayout.NORTH);
 		add(panelBottom, BorderLayout.SOUTH);
-		
+
 		pack();
 		setResizable(false);
 		setLocationRelativeTo(null);
@@ -192,6 +207,8 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 					this.mainBot.connectBot();
 					setUtilitiesEnabled(true);
 					appendToChat(time + ": Connected");
+					botStatus.setText("Bot Status: Connected");
+					botStatus.setForeground(Color.GREEN);
 					connectBot.setBackground(Color.GREEN);
 					connectBot.setText("Disconnect");
 				} 
@@ -211,6 +228,8 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 					this.mainBot.disconnect();
 					setUtilitiesEnabled(false);
 					appendToChat(time + ": Bot disconnected by user");
+					botStatus.setText("Bot Status: Disconnected");
+					botStatus.setForeground(Color.RED);
 					connectBot.setBackground(Color.RED);
 					connectBot.setText("Connect");
 				} 
@@ -227,6 +246,41 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		else if(arg0.getSource() == enableCommands)
 		{
 			this.mainBot.setEnabled(enableCommands.isSelected());
+		}
+		else if(arg0.getSource() == saveLog)
+		{	
+			try 
+			{
+				saveLogData();
+				this.appendToChat("- Chat log saved");
+			} 
+			catch (Exception ex) 
+			{
+				JOptionPane.showMessageDialog(null, "Error saving log: " + ex.getMessage());
+				ex.printStackTrace();
+			}
+		}
+	}
+	
+	private void saveLogData() throws Exception
+	{
+		FileWriter fw;
+		JFileChooser getFileLocation = new JFileChooser();
+		
+		getFileLocation.setDialogTitle("Save chat log as");
+		getFileLocation.setDialogType(JFileChooser.SAVE_DIALOG);
+		
+		int selection = getFileLocation.showSaveDialog(this);
+		
+		if(selection == JFileChooser.APPROVE_OPTION)
+		{
+			File saveFile = getFileLocation.getSelectedFile();
+			
+			fw = new FileWriter(saveFile, true);
+			
+			chatData.write(fw);
+			
+			fw.close();
 		}
 	}
 

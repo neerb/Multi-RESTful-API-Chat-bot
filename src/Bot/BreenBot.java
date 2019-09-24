@@ -9,9 +9,8 @@ import com.google.gson.*;
 
 import org.jibble.pircbot.*;
 
-// Get cryptocurrency data - cryptonator API
-// Get google images data
-// Currency Exchange rate
+// Get cryptocurrency data - cryptonator API - done
+// Currency Exchange rate - done
 
 // Add ability to switch between fahrenheit and celcius (boolean)
 // Organize methods by similarity
@@ -21,7 +20,6 @@ public class BreenBot extends PircBot
 	private String channel;
 	private String server;
 	private BotGuiHandler guiInterface;
-	private GetBotServerAndNamePrompt prompt;
 	private boolean enabled = true;
 		
 	public BreenBot()
@@ -82,7 +80,7 @@ public class BreenBot extends PircBot
 	}
 	
 	/*
-	 * 	This method gets the raw weather data of the cities current overall condition,
+	 * 	This method gets the raw weather data of the cities by city name current overall condition,
 	 * 	maximum temperature, minimum temperature, and current temperature.
 	 * 
 	 *  The data is returned as a String array of size 4.
@@ -92,6 +90,7 @@ public class BreenBot extends PircBot
 	 *  index 3 = current temp
 	 * 
 	 * 	Uses openweather API
+	 * 
 	 */
 	String[] getRawWeatherData(String city) throws JsonSyntaxException, Exception
 	{
@@ -121,22 +120,18 @@ public class BreenBot extends PircBot
 			{
 				JsonArray weatherArray = weather.getAsJsonArray();
 				
-				String arrayToJsonObject = weatherArray.toString().substring(1, weather.toString().length() - 1);
+				JsonElement skyElement = weatherArray.get(0);
 				
-				JsonParser arrayParser = new JsonParser();
-				
-				JsonElement jsonArrayTree = arrayParser.parse(arrayToJsonObject);
-				
-				if(jsonArrayTree.isJsonObject())
+				if(skyElement.isJsonObject())
 				{
-					JsonObject arrayObject = jsonArrayTree.getAsJsonObject();
-					JsonElement desc = arrayObject.get("description");
+					JsonObject skyObject = skyElement.getAsJsonObject();
 					
-					weatherData[0] = desc.getAsString();
+					JsonElement skyData = skyObject.get("description");
+					
+					weatherData[0] = skyData.getAsString();
 				}
 			}
 			
-						
 			if(main.isJsonObject())
 			{
 				JsonObject mainToObject = main.getAsJsonObject();
@@ -156,7 +151,7 @@ public class BreenBot extends PircBot
 	}
 	
 	/*
-	 * 	This method gets the raw weather data of the cities current overall condition,
+	 * 	This method gets the raw weather data of the cities by zipcode current overall condition,
 	 * 	maximum temperature, minimum temperature, and current temperature.
 	 * 
 	 *  The data is returned as a String array of size 4.
@@ -166,6 +161,7 @@ public class BreenBot extends PircBot
 	 *  index 3 = current temp
 	 * 
 	 * 	Uses openweather API
+	 * 
 	 */
 	String[] getRawWeatherDataByZipcode(String zipcode) throws JsonSyntaxException, Exception
 	{
@@ -195,21 +191,17 @@ public class BreenBot extends PircBot
 			{
 				JsonArray weatherArray = weather.getAsJsonArray();
 				
-				String arrayToJsonObject = weatherArray.toString().substring(1, weather.toString().length() - 1);
+				JsonElement skyElement = weatherArray.get(0);
 				
-				JsonParser arrayParser = new JsonParser();
-				
-				JsonElement jsonArrayTree = arrayParser.parse(arrayToJsonObject);
-				
-				if(jsonArrayTree.isJsonObject())
+				if(skyElement.isJsonObject())
 				{
-					JsonObject arrayObject = jsonArrayTree.getAsJsonObject();
-					JsonElement desc = arrayObject.get("description");
+					JsonObject skyObject = skyElement.getAsJsonObject();
 					
-					weatherData[0] = desc.getAsString();
+					JsonElement skyData = skyObject.get("description");
+					
+					weatherData[0] = skyData.getAsString();
 				}
 			}
-			
 						
 			if(main.isJsonObject())
 			{
@@ -231,6 +223,8 @@ public class BreenBot extends PircBot
 	
 	/*
 	 *	Returns distance data from zipcode API
+	 *	
+	 *	Uses zipcode API
 	 */
 	double getDistanceData(String zip1, String zip2, char unit) throws Exception
 	{
@@ -259,8 +253,9 @@ public class BreenBot extends PircBot
 	}
 	
 	/*
-	 * This method gets the cryptocurrency data
-	 * Uses cryptonator API
+	 *	This method gets the cryptocurrency data
+	 * 
+	 *	Uses cryptonator API
 	 */
 	double getCryptoPrice(String symbol) throws JsonSyntaxException, Exception
 	{
@@ -298,6 +293,11 @@ public class BreenBot extends PircBot
 		return price;
 	}
 	
+	/*
+	 *	Returns exchange rates in string format
+	 *
+	 *	uses exchangeratesapi
+	 */
 	String getExchangeRates(String currency) throws Exception
 	{
 		String[] rateSymbols = {
@@ -445,6 +445,14 @@ public class BreenBot extends PircBot
 		return args;
 	}
 	
+	private void sendMessageAndAppend(String channel, String message)
+	{
+    	String time = new java.util.Date().toString();
+
+		sendMessage(channel, message);
+		guiInterface.appendToChat(time + " - " + this.getName() + ": " + message);
+	}
+	
 	/*
 	 * Called when a message is sent within the channel
 	 * 
@@ -473,25 +481,25 @@ public class BreenBot extends PircBot
     	String time = new java.util.Date().toString();
 		guiInterface.appendToChat(time + " - " + sender +  ": " + message);
 		
-		if(this.enabled == true)
+		try
 		{
-			if(message.charAt(0) == '!')
+			if(this.enabled == true)
 			{
-				/// API call commands
-				/// ***
-				// Get weather data
-				// Format: !weather <String: City Name("Dallas", "London", "Los Angeles">
-				if(getPrefixCommand(message).equalsIgnoreCase("!weather"))
+				if(message.charAt(0) == '!')
 				{
-					String city = "";
-					
-					for(int i = 0; i < args.length; i++)
+					/// API call commands
+					/// ***
+					// Get weather data
+					// Format: !weather <String: City Name("Dallas", "London", "Los Angeles">
+					if(getPrefixCommand(message).equalsIgnoreCase("!weather"))
 					{
-						city += args[i]  + (i < args.length - 1 ? " " : "");
-					}
-					
-					try 
-					{
+						String city = "";
+						
+						for(int i = 0; i < args.length; i++)
+						{
+							city += args[i]  + (i < args.length - 1 ? " " : "");
+						}
+						
 						String weatherDataString = "";
 						
 						String[] data = getRawWeatherData(city);
@@ -500,172 +508,156 @@ public class BreenBot extends PircBot
 								"F while the minimum temperature is " + kelvinToFahrenheit(Double.parseDouble(data[2])) +
 								"F and the current temperature is " + kelvinToFahrenheit(Double.parseDouble(data[3])) + "F";
 						
-						sendMessage(channel, weatherDataString);
-					} 
-					catch (Exception e) 
-					{
-						System.out.println(e.getMessage());
+						sendMessageAndAppend(channel, weatherDataString);
 					}
-				}
-				
-				// Returns distance between two zip codes
-				// Format: !distance <zipcode 1> <zipcode 2> <unit of measurement: 'k' or 'm'>
-				if(getPrefixCommand(message).equalsIgnoreCase("!distance"))
-				{
-					double distance;
-					try 
+					
+					// Returns distance between two zip codes
+					// Format: !distance <zipcode 1> <zipcode 2> <unit of measurement: 'k' or 'm'>
+					if(getPrefixCommand(message).equalsIgnoreCase("!distance"))
 					{
+						double distance;
+
 						distance = getDistanceData(args[0], args[1], args[2].charAt(0));
 						
-						sendMessage(channel, "Distance between " + args[0] + " and " + args[1] + " is " + 
+						sendMessageAndAppend(channel, "Distance between " + args[0] + " and " + args[1] + " is " + 
 								distance + (args[2].charAt(0) == 'm' ? " miles" : " kilometers"));
-					} 
-					catch (Exception e) 
-					{
-						e.printStackTrace();
 					}
-				}
-				
-				// Gets cryptocurrency price of first argument (symbol of crypto)
-				// Format: !cprice <crypto symbol(BTC, ETH, etc...)>
-				if(getPrefixCommand(message).equalsIgnoreCase("!cprice"))
-				{
-					String symbol = args[0];
-					symbol = symbol.toUpperCase();
 					
-					try 
+					// Gets cryptocurrency price of first argument (symbol of crypto)
+					// Format: !cprice <crypto symbol(BTC, ETH, etc...)>
+					if(getPrefixCommand(message).equalsIgnoreCase("!cprice"))
 					{
+						String symbol = args[0];
+						symbol = symbol.toUpperCase();
+						
 						double price = getCryptoPrice(symbol);
 						
 						if(price != -1)
 						{
 							String priceDataString = "The price of " + symbol + " is currently $" + price;
 							
-							sendMessage(channel, priceDataString);
+							sendMessageAndAppend(channel, priceDataString);
 						}
 						else
 						{
 							String errorMessage = "Error: please make sure you are entering valid data for this command.";
 							
-							sendMessage(channel, errorMessage);
+							sendMessageAndAppend(channel, errorMessage);
 						}
-					} 
-					catch (Exception e) 
-					{
-						System.out.println(e.getMessage());
 					}
-				}
+	
+					if(getPrefixCommand(message).equalsIgnoreCase("!exchange"))
+					{
+						String symbol = args[0];
+						symbol = symbol.toUpperCase();
+						
 
-				if(getPrefixCommand(message).equalsIgnoreCase("!exchange"))
-				{
-					String symbol = args[0];
-					symbol = symbol.toUpperCase();
-					
-					try 
-					{
-						sendMessage(channel, "Exchange rates for " + symbol + " are: " + getExchangeRates(symbol));
-					} 
-					catch (Exception e) 
-					{
-						System.out.println(e.getMessage());
+						sendMessageAndAppend(channel, "Exchange rates for " + symbol + " are: " + getExchangeRates(symbol));
 					}
-				}
-				/// API call commands end
-				
-				
-				/// Math function commands
-				/// ***
-				// Returns exponential calculation of arg1(base) and arg2(exponent)
-				// Format: !ex <base> <exponent>
-				if(getPrefixCommand(message).equalsIgnoreCase("!ex"))
-				{
-					double base = Double.parseDouble(args[0]);
-					double exponent = Double.parseDouble(args[1]);
+					/// API call commands end
 					
-					double number = Math.pow(base,  exponent);
 					
-					sendMessage(channel, base + "^" + exponent + " = " + number);
-				}
-				
-				// Multiplies as many arguments as there are
-				// Format: !multiply <num1> <num2> <num3> ..... and so on to <numN>
-				if(getPrefixCommand(message).equalsIgnoreCase("!multiply"))
-				{
-					double product = 1;
-					
-					for(int i = 0; i < args.length; i++)
+					/// Math function commands
+					/// ***
+					// Returns exponential calculation of arg1(base) and arg2(exponent)
+					// Format: !ex <base> <exponent>
+					if(getPrefixCommand(message).equalsIgnoreCase("!ex"))
 					{
-						product *= Double.parseDouble(args[i]);
+						double base = Double.parseDouble(args[0]);
+						double exponent = Double.parseDouble(args[1]);
+						
+						double number = Math.pow(base,  exponent);
+						
+						sendMessageAndAppend(channel, base + "^" + exponent + " = " + number);
 					}
 					
-					sendMessage(channel, "The product of your numbers is " + product);
-				}
-				
-				// Returns factorial of first argument
-				// Format: !factorial <number>
-				if(getPrefixCommand(message).equalsIgnoreCase("!factorial"))
-				{
-					int num = Integer.parseInt(args[0]);
-					
-					sendMessage(channel, "Factorial of " + num + ": " + factorial(num));
-				}
-				/// Math function commands end
-				
-				
-				/// Miscellaneous commands
-				/// ***
-				// Gets current time
-				if(getPrefixCommand(message).equalsIgnoreCase("!time")) 
-				{
-					 String currTime = new java.util.Date().toString();
-					 sendMessage(channel, sender + ": The time is now " + currTime);
-				}
-				
-				// Quick ping command
-				if(getPrefixCommand(message).equalsIgnoreCase("!ping"))
-				{
-					String pong = "Pong!";
-					sendMessage(channel, pong);
-				}
-				
-				// Repeat command: repeats whatever the string parameter is
-				if(getPrefixCommand(message).equalsIgnoreCase("!repeat"))
-				{
-					String returnMessage = "";
-					String[] split = message.split(" ");
-					
-					for(int i = 1; i < split.length; i++)
+					// Multiplies as many arguments as there are
+					// Format: !multiply <num1> <num2> <num3> ..... and so on to <numN>
+					if(getPrefixCommand(message).equalsIgnoreCase("!multiply"))
 					{
-						returnMessage += split[i] + ((i < split.length - 1) ? " " : "");
+						double product = 1;
+						
+						for(int i = 0; i < args.length; i++)
+						{
+							product *= Double.parseDouble(args[i]);
+						}
+						
+						sendMessageAndAppend(channel, "The product of your numbers is " + product);
 					}
 					
-					sendMessage(channel, returnMessage);
-				}
-				
-				// Changes the bot nickname
-				if(getPrefixCommand(message).equalsIgnoreCase("!changenick"))
-				{
-					String newUser = "";
-					
-					for(int i = 0; i < args.length; i++)
+					// Returns factorial of first argument
+					// Format: !factorial <number>
+					if(getPrefixCommand(message).equalsIgnoreCase("!factorial"))
 					{
-						newUser += args[i]  + (i < args.length - 1 ? " " : "");
+						int num = Integer.parseInt(args[0]);
+						
+						sendMessageAndAppend(channel, "Factorial of " + num + ": " + factorial(num));
+					}
+					/// Math function commands end
+					
+					
+					/// Miscellaneous commands
+					/// ***
+					// Gets current time
+					if(getPrefixCommand(message).equalsIgnoreCase("!time")) 
+					{
+						 String currTime = new java.util.Date().toString();
+						 sendMessageAndAppend(channel, sender + ": The time is now " + currTime);
 					}
 					
-					changeNick(newUser);
+					// Quick ping command
+					if(getPrefixCommand(message).equalsIgnoreCase("!ping"))
+					{
+						String pong = "Pong!";
+						sendMessageAndAppend(channel, pong);
+					}
+					
+					// Repeat command: repeats whatever the string parameter is
+					if(getPrefixCommand(message).equalsIgnoreCase("!repeat"))
+					{
+						String returnMessage = "";
+						String[] split = message.split(" ");
+						
+						for(int i = 1; i < split.length; i++)
+						{
+							returnMessage += split[i] + ((i < split.length - 1) ? " " : "");
+						}
+						
+						sendMessageAndAppend(channel, returnMessage);
+					}
+					
+					// Changes the bot nickname
+					if(getPrefixCommand(message).equalsIgnoreCase("!changenick"))
+					{
+						String newUser = "";
+						
+						for(int i = 0; i < args.length; i++)
+						{
+							newUser += args[i]  + (i < args.length - 1 ? " " : "");
+						}
+						
+						changeNick(newUser);
+					}
+					/// Miscellaneous commands end
 				}
-				/// Miscellaneous commands end
+				// Handles word commands
+				else
+				{
+					handleWordMessage(channel, sender, message, args);
+				}
 			}
-			// Handles word commands
+			// Commands not enabled
 			else
 			{
-				handleWordMessage(channel, sender, message, args);
+				sendMessageAndAppend(channel, getName() + " is not currently taking commands/messages.");
 			}
 		}
-		// Commands not enabled
-		else
+		catch(Exception ex)
 		{
-			sendMessage(channel, getName() + " is not currently taking commands/messages.");
+			sendMessageAndAppend(channel, "Error: invalid data entered - Exception occured: " + ex.getMessage());
+			guiInterface.appendToChat(ex.getMessage());
+			System.out.println(ex.getMessage());
+			ex.printStackTrace();
 		}
     }
     
@@ -724,7 +716,7 @@ public class BreenBot extends PircBot
         						"F while the minimum temperature is " + kelvinToFahrenheit(Double.parseDouble(data[2])) +
         						"F and the current temperature is " + kelvinToFahrenheit(Double.parseDouble(data[3])) + "F";
         				
-        				sendMessage(this.channel, weatherDataString);
+        				sendMessageAndAppend(this.channel, weatherDataString);
         			} 
         			catch (Exception e) 
         			{

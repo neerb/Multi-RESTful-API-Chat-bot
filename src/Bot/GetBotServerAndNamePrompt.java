@@ -65,11 +65,6 @@ public class GetBotServerAndNamePrompt extends JFrame implements ActionListener
 		submit.addActionListener(this);
 		
 		add(panel, SwingConstants.CENTER);		
-		
-		setResizable(false);
-		setLocationRelativeTo(null);
-		toFront();
-		setVisible(true);
 	}
 	
 	public void reset()
