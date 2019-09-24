@@ -63,8 +63,8 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		panelTop.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
 		layoutBottom = new GridLayout(3, 2);
-		layoutBottom.setHgap(10);
-		layoutBottom.setVgap(10);
+		layoutBottom.setHgap(5);
+		layoutBottom.setVgap(5);
 		
 		panelBottom.setAlignmentX(Component.CENTER_ALIGNMENT);
 
