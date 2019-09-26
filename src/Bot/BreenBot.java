@@ -441,17 +441,32 @@ public class BreenBot extends PircBot
 	    return null;
 	}
 	
+	private void sendHelpOperations()
+	{
+		sendMessageAndAppend(this.channel, "- Weather data by zipcode or city name.  Use the explicit command: !weather <city name or zipcode> or just ask me something like: How's the weather in 75087?");
+		sendMessageAndAppend(this.channel, "- Cryptocurrency price data: !cprice <crypto symbol (BTC, ETH, etc...)>");
+		sendMessageAndAppend(this.channel, "- Exchange rates for any currency: !exchange <currency symbol (USD, JPY, MXN, etc...)>");
+		sendMessageAndAppend(this.channel, "- State/city government representatives by zipcode: !representatives <zipcode> or just ask me something like: Who are the representatives for 01002?");
+		sendMessageAndAppend(this.channel, "- Get distance between two zip codes in miles or kilometers: !distance <zipcode 1> <zipcode 2> <m or k>");
+		sendMessageAndAppend(this.channel, "- Multiply a list of numbers: !multiply <num1> <num2> <num3> ... <num N>");
+		sendMessageAndAppend(this.channel, "- Apply factorial on a number: !factorial <number>");
+		sendMessageAndAppend(this.channel, "- Calculate exponential: !ex <base> <exponent>");
+		sendMessageAndAppend(this.channel, "- Change my nickname: !changenick <new nickname>");
+		sendMessageAndAppend(this.channel, "- Get the current time: !time");
+		sendMessageAndAppend(this.channel, "- Ping the bot: !ping");
+	}
+	
 	// This function is called upon the bot connecting to the channel
 	public void onConnect()
 	{
-		String welcomeMessage = "Hello! My name is BreenBot. " +
-				"I can tell you the statistics and prices of any cryptocurrency you choose!  I can also tell you the current weather for yours or anyone else's area!" +
-				"  Commands: " +
-				"!multiply (any number of arguments) - returns multiplied arguments, " +
-				"!factorial (number) - returns factorial of input number, " + 
-				"!repeat (string) - repeats the given string, ";
+		String welcomeMessage = "Hello! My name is BreenBot. Here's a list of things I can do for you:";
+		
 			
-		sendMessage(this.channel, welcomeMessage);
+		sendMessageAndAppend(this.channel, welcomeMessage);
+
+		sendHelpOperations();
+		
+		sendMessageAndAppend(this.channel, "Please use !help to get this list of operations again.");
 	}
 	
 	public String getPrefixCommand(String message)
@@ -529,6 +544,7 @@ public class BreenBot extends PircBot
 	 * Miscellaneous:
 	 * 	!repeat
 	 * 	!changenick
+	 * 	!help
 	 */
     public void onMessage(String channel, String sender, String login, String hostname, String message) 
     {
@@ -614,6 +630,7 @@ public class BreenBot extends PircBot
 					/// API call commands end
 					
 					
+					
 					/// Math function commands
 					/// ***
 					// Returns exponential calculation of arg1(base) and arg2(exponent)
@@ -651,6 +668,7 @@ public class BreenBot extends PircBot
 						sendMessageAndAppend(channel, "Factorial of " + num + ": " + factorial(num));
 					}
 					/// Math function commands end
+					
 					
 					
 					/// Miscellaneous commands
@@ -694,6 +712,12 @@ public class BreenBot extends PircBot
 						}
 						
 						changeNick(newUser);
+					}
+					
+					// Shows user list of available commands
+					if(getPrefixCommand(message).equalsIgnoreCase("!help"))
+					{
+						sendHelpOperations();
 					}
 					/// Miscellaneous commands end
 				}
