@@ -7,7 +7,6 @@
 
 package Bot;
 import java.io.BufferedReader;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -23,8 +22,7 @@ import twitter4j.conf.ConfigurationBuilder;
 // Get cryptocurrency data - cryptonator API - done
 // Currency Exchange rate - done
 
-// Add ability to switch between fahrenheit and celcius (boolean)
-// Organize methods by similarity
+// Organize methods by similarity - done
 
 public class BreenBot extends PircBot
 {
@@ -634,7 +632,7 @@ public class BreenBot extends PircBot
 						
 						String[] data = getRawWeatherData(city);
 						
-						weatherDataString = "The sky in " + city + " is " + data[0] + " and the max temperature is " + kelvinToFahrenheit(Double.parseDouble(data[1])) + 
+						weatherDataString = "The weather in " + city + " is " + data[0] + " and the max temperature is " + kelvinToFahrenheit(Double.parseDouble(data[1])) + 
 								"F while the minimum temperature is " + kelvinToFahrenheit(Double.parseDouble(data[2])) +
 								"F and the current temperature is " + kelvinToFahrenheit(Double.parseDouble(data[3])) + "F";
 						
@@ -807,6 +805,8 @@ public class BreenBot extends PircBot
 	{
 		message = message.toLowerCase();
 		
+		
+		// Handle weather case
 		if(message.contains("weather"))
 		{
 			long potentialZipcode;
@@ -829,7 +829,7 @@ public class BreenBot extends PircBot
 	    				
 	    				String[] data = getRawWeatherDataByZipcode(zipToString);
 	    				
-	    				weatherDataString = "The sky in " + zipToString + " is " + data[0] + " and the max temperature is " + kelvinToFahrenheit(Double.parseDouble(data[1])) + 
+	    				weatherDataString = "The weather in " + zipToString + " is " + data[0] + " and the max temperature is " + kelvinToFahrenheit(Double.parseDouble(data[1])) + 
 	    						"F while the minimum temperature is " + kelvinToFahrenheit(Double.parseDouble(data[2])) +
 	    						"F and the current temperature is " + kelvinToFahrenheit(Double.parseDouble(data[3])) + "F";
 	    				
@@ -846,6 +846,7 @@ public class BreenBot extends PircBot
 	    		}
 	    	}
 		}
+		// Handle representative case
 		else if(message.contains("representative"))
 		{
 			long potentialZipcode;

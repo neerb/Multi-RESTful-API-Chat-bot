@@ -9,7 +9,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 
 /*
  *  This class is the admin commands/display for the bot.
@@ -51,49 +50,49 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 			
 		chatFont = new Font(Font.MONOSPACED, Font.PLAIN, 14);
 		statusFont = new Font(Font.MONOSPACED, Font.BOLD, 16);
-
-		Dimension chatDimension = new Dimension(width, height);
-		Dimension buttonDimension = new Dimension(width - chatDimension.width, height);
 	
 		panelTop = new JPanel();
 		panelBottom = new JPanel();
 		
 		layoutTop = new BoxLayout(panelTop, BoxLayout.Y_AXIS);
 		
+		// Align top panel
 		panelTop.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
+		// Bottom layout has gridlayout
 		layoutBottom = new GridLayout(3, 2);
 		layoutBottom.setHgap(5);
 		layoutBottom.setVgap(5);
 		
+		// Align bottom panel
 		panelBottom.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		setTitle(mainBot.getName() + " - Admin Controls");
 		
+		// Set size of JFrame and set default close operation
 		setSize(width, height);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
-		//panelTop.setSize(chatDimension);
-		//panelTop.setBounds(0, 0, width, height);
-		
-		//panelBottom.setSize(buttonDimension);
-		//panelBottom.setBounds(0, chatDimension.height + 20, buttonDimension.width, buttonDimension.height);
-		
+		// Set up panels
 		panelTop.setLayout(layoutTop);
 		panelTop.setBorder(BorderFactory.createTitledBorder("Live chat (" + this.mainBot.getName() + "):"));
 		panelBottom.setLayout(layoutBottom);
 		panelBottom.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
+		// Set up chat data field
 		chatData = new JTextArea(15, 100);
 		chatData.setEditable(false);
 		chatData.setFont(chatFont);
 		chatData.setLineWrap(true);
 		chatData.setWrapStyleWord(true);
 		
+		// Initialize chat scroller
 		chatScroller = new JScrollPane(chatData);
 		
+		// Add the chat scroller to upper panel
 		panelTop.add(chatScroller);
 		
+		// Set up the admin message field (sends admin messages)
 		adminMessageField = new JTextField();
 		adminMessageField.setEditable(true);
 		adminMessageField.setFont(chatFont);
@@ -101,9 +100,11 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		adminMessageField.setHorizontalAlignment(JTextField.LEFT);
 		adminMessageField.addKeyListener(this);
 		
+		// Set up admin message field send button
 		sendAdminMessageField = new JButton();
 		sendAdminMessageField.setText("Send Administrator Message");
 		
+		// Add components to bottom panel
 		panelBottom.add(adminMessageField);
 		panelBottom.add(sendAdminMessageField);
 		
@@ -160,11 +161,9 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		enableCommands.setEnabled(val);
 	}
 	
-	private void sendBotMessage(String message)
-	{
-		mainBot.sendMessage(mainBot.getCurrentChannel(), message);
-	}
-	
+	/*
+	 * Appends a message to the chat
+	 */
 	public void appendToChat(String message)
 	{
 		chatData.setText(chatData.getText() + message + "\n");
@@ -204,6 +203,7 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 			{
 				try 
 				{
+					// Connect bot to server
 					this.mainBot.connectBot();
 					setUtilitiesEnabled(true);
 					appendToChat(time + ": Connected");
@@ -225,6 +225,7 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 			{
 				try 
 				{
+					// Disconnect bot from server
 					this.mainBot.disconnect();
 					setUtilitiesEnabled(false);
 					appendToChat(time + ": Bot disconnected by user");
@@ -262,6 +263,12 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		}
 	}
 	
+	/*
+	 * This method retrieves the data from the console field
+	 * and saves it to a file location specified by the user.
+	 * A file dialog is shown to allow the user to choose
+	 * where they wish to store the chat log.
+	 */
 	private void saveLogData() throws Exception
 	{
 		FileWriter fw;
@@ -278,6 +285,7 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 			
 			fw = new FileWriter(saveFile, true);
 			
+			// Store chat data
 			chatData.write(fw);
 			
 			fw.close();
