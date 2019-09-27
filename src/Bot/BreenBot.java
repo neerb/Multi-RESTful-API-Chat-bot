@@ -1,5 +1,11 @@
+/*
+ * Created by Nathan Breen(neerb)
+ * 
+ * BreenBot 
+ * ----Add description here
+ */
+
 package Bot;
-import java.awt.List;
 import java.io.BufferedReader;
 
 import java.io.IOException;
@@ -7,9 +13,12 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 
+// External library imports
 import com.google.gson.*;
-
 import org.jibble.pircbot.*;
+import twitter4j.*;
+import twitter4j.User;
+import twitter4j.conf.ConfigurationBuilder;
 
 // Get cryptocurrency data - cryptonator API - done
 // Currency Exchange rate - done
@@ -74,11 +83,53 @@ public class BreenBot extends PircBot
 		this.guiInterface = botGui;
 	}
 	
+	/*
+	 * Connects bot to IRC freenode server
+	 */
 	public void connectBot() throws Exception
 	{
 		setVerbose(true);
 		connect(this.server);
 		joinChannel(this.channel);
+	}
+	
+	/*
+	 * This method returns the data of the most recently tweeted
+	 * message from any user(parameter).
+	 * 
+	 * This utilizes the twitter4j library
+	 */
+	String getTwitterDataByUsername(String username)
+	{
+		String returnString = "";
+		
+		try 
+		{
+			ConfigurationBuilder cf = new ConfigurationBuilder();
+			
+			cf.setDebugEnabled(true)
+				.setOAuthConsumerKey("weIgCUu5dV7DiOauHGq3TcQ87")	
+				.setOAuthConsumerSecret("poq8VPtHR1FnQFrWgyf5wn7p3UWgYkJAIGZM2GQRyZZNcQvaXA")
+				.setOAuthAccessToken("1176999300573913088-rjgh5AbRmYjzj1FXPg3dnSi8kXMFt0")
+				.setOAuthAccessTokenSecret("Ikz7Aih0FTO7cAbyuMRSKR8oYbRM6AMgLEO46cY6e8Hqr");
+			
+			TwitterFactory tf = new TwitterFactory(cf.build());
+			Twitter twitterInstance = tf.getInstance();
+						
+			ResponseList<User> result = twitterInstance.searchUsers(username, 1);
+						
+			for(User u : result)
+			{
+				if(u != null)
+					returnString += "@" + u.getScreenName() + " - " + u.getStatus().getText();
+			}
+		} 
+		catch (Exception ex) 
+		{
+			ex.printStackTrace();
+		}
+		
+		return returnString;
 	}
 	
 	/*
@@ -102,7 +153,6 @@ public class BreenBot extends PircBot
 		String url = urlHalf1 + city + apiCode;
 		
 		String[] weatherData = new String[4];
-		String data = null;
 		
 		JsonParser parser = new JsonParser();
 		
@@ -173,7 +223,6 @@ public class BreenBot extends PircBot
 		String url = urlHalf1 + zipcode + ",us" + apiCode;
 		
 		String[] weatherData = new String[4];
-		String data = null;
 		
 		JsonParser parser = new JsonParser();
 		
@@ -363,6 +412,10 @@ public class BreenBot extends PircBot
 		return rates;
 	}
 	
+	/*
+	 * This method returns the data received from the "whoaremyrepresentatives" API.
+	 * Tells the user who their representatives are by their zipcode.
+	 */
 	ArrayList<String> getRepresentativeDataByZipcode(String zipcode) throws Exception
 	{
 		ArrayList<String> returnData = new ArrayList<String>();
@@ -389,6 +442,7 @@ public class BreenBot extends PircBot
 				JsonArray resultsArray = resultsElement.getAsJsonArray();
 				
 				int count = 0;
+				
 				// Saves three representatives max from json
 				for(int pos = 0; pos < resultsArray.size() && count < 3; pos++)
 				{
@@ -398,6 +452,7 @@ public class BreenBot extends PircBot
 					{
 						JsonObject currentObject = currentElement.getAsJsonObject();
 						
+						// Add data to returnData array
 						returnData.add(currentObject.get("name").getAsString());
 						returnData.add(currentObject.get("party").getAsString());
 						returnData.add(currentObject.get("phone").getAsString());
@@ -412,17 +467,30 @@ public class BreenBot extends PircBot
 		return returnData;
 	}
 	
+	/*
+	 * This method opens a url stream and requests the data from
+	 * a specified URL.  The data that is returned from this is
+	 * ideally Json objects, but it will also return whatever
+	 * the server sends back from the request.
+	 * 
+	 * Returns a string containing(ideally) Json object
+	 */
 	String getJsonData(String urlString) throws IOException
 	{
 	    BufferedReader reader = null;
 	    try 
 	    {
+	    	// Create URL
 	        URL url = new URL(urlString);
+	        // Create URL stream
 	        reader = new BufferedReader(new InputStreamReader(url.openStream()));
 	        StringBuffer buffer = new StringBuffer();
+	        
 	        int read;
+	        
 	        char[] chars = new char[1024];
 	        
+	        // Copies individual characters into buffer until there aren't anymore to read.
 	        while ((read = reader.read(chars)) != -1)
 	            buffer.append(chars, 0, read); 
 
@@ -434,6 +502,7 @@ public class BreenBot extends PircBot
 	    }
 	    finally 
 	    {
+	    	// Close the stream
 	        if (reader != null)
 	            reader.close();
 	    }
@@ -441,8 +510,13 @@ public class BreenBot extends PircBot
 	    return null;
 	}
 	
+	/*
+	 * Sends a list of commands to help the user understand what can be 
+	 * accomplished using this bot.
+	 */
 	private void sendHelpOperations()
 	{
+		sendMessageAndAppend(this.channel, "- Get most recent tweet by account name.  Use the explicit command: !getrecenttweet <screen name/twitter handle>");
 		sendMessageAndAppend(this.channel, "- Weather data by zipcode or city name.  Use the explicit command: !weather <city name or zipcode> or just ask me something like: How's the weather in 75087?");
 		sendMessageAndAppend(this.channel, "- Cryptocurrency price data: !cprice <crypto symbol (BTC, ETH, etc...)>");
 		sendMessageAndAppend(this.channel, "- Exchange rates for any currency: !exchange <currency symbol (USD, JPY, MXN, etc...)>");
@@ -461,7 +535,6 @@ public class BreenBot extends PircBot
 	{
 		String welcomeMessage = "Hello! My name is BreenBot. Here's a list of things I can do for you:";
 		
-			
 		sendMessageAndAppend(this.channel, welcomeMessage);
 
 		sendHelpOperations();
@@ -469,39 +542,19 @@ public class BreenBot extends PircBot
 		sendMessageAndAppend(this.channel, "Please use !help to get this list of operations again.");
 	}
 	
+	/*
+	 * Gets the initial command from the user:
+	 * instructs onMessage how to react and
+	 * compute output.
+	 */
 	public String getPrefixCommand(String message)
 	{
 		return message.split(" ")[0];
 	}
-	
-	
-	// Iterative factorial: returns factorial of n
-	public long factorial(int n)
-	{
-		int product = 1;
-		
-		for(int i = n; i >= 1; i--)
-		{
-			product *= i;
-		}
-		
-		return product;
-	}
 
 	/*
-	 * Convert kelvin to fahrenheit
-	 * 
-	 * Parameter: double containing kelvin temperature
-	 */
-    double kelvinToFahrenheit(double kelvin)
-    {    	
-    	return Math.round(((kelvin - 273.15) * (9.0/5.0) + 32) * 100.0) / 100.0;
-    }
-	
-	/*
-	 * This function returns all the arguments within a message passed to it.
+	 * This method returns all the arguments within a message passed to it.
 	 * Disregards first function code beginning with '!'
-	 * 
 	 */
 	String[] getArgs(String message)
 	{
@@ -515,25 +568,18 @@ public class BreenBot extends PircBot
 		
 		return args;
 	}
-	
-	private void sendMessageAndAppend(String channel, String message)
-	{
-    	String time = new java.util.Date().toString();
 
-		sendMessage(channel, message);
-		guiInterface.appendToChat(time + " - " + this.getName() + ": " + message);
-	}
-	
 	/*
 	 * Called when a message is sent within the channel
 	 * 
 	 * Current command list:
 	 * 
 	 * API calls:
-	 * 	!weather
-	 * 	!distance
-	 * 	!cprice
-	 * 	!exchange
+	 * 	!getrecenttweet <screen name/twitter handle>
+	 * 	!weather <city name>
+	 * 	!distance <zipcode1> <zipcode2> <m or k>
+	 * 	!cprice	<cryptocurrency symbol>
+	 * 	!exchange <currency symbol>
 	 * 	!representative <zipcode>
 	 * 
 	 * Math functions:
@@ -546,12 +592,12 @@ public class BreenBot extends PircBot
 	 * 	!changenick
 	 * 	!help
 	 */
-    public void onMessage(String channel, String sender, String login, String hostname, String message) 
-    {
+	public void onMessage(String channel, String sender, String login, String hostname, String message) 
+	{
 		String[] args = getArgs(message);
 		
 		// Update UI
-    	String time = new java.util.Date().toString();
+		String time = new java.util.Date().toString();
 		guiInterface.appendToChat(time + " - " + sender +  ": " + message);
 		
 		try
@@ -562,6 +608,17 @@ public class BreenBot extends PircBot
 				{
 					/// API call commands
 					/// ***
+					// Get first tweet from user data
+					// Format: !getrecenttweet <username>
+					if(getPrefixCommand(message).equalsIgnoreCase("!getrecenttweet"))
+					{
+						String getSearchName = args[0].toLowerCase();
+						
+						String getTweet = getTwitterDataByUsername(getSearchName);
+						
+						sendMessageAndAppend(channel, getTweet);
+					}
+					
 					// Get weather data
 					// Format: !weather <String: City Name("Dallas", "London", "Los Angeles">
 					if(getPrefixCommand(message).equalsIgnoreCase("!weather"))
@@ -589,7 +646,7 @@ public class BreenBot extends PircBot
 					if(getPrefixCommand(message).equalsIgnoreCase("!distance"))
 					{
 						double distance;
-
+	
 						distance = getDistanceData(args[0], args[1], args[2].charAt(0));
 						
 						sendMessageAndAppend(channel, "Distance between " + args[0] + " and " + args[1] + " is " + 
@@ -624,7 +681,7 @@ public class BreenBot extends PircBot
 						String symbol = args[0];
 						symbol = symbol.toUpperCase();
 						
-
+	
 						sendMessageAndAppend(channel, "Exchange rates for " + symbol + " are: " + getExchangeRates(symbol));
 					}
 					/// API call commands end
@@ -740,9 +797,142 @@ public class BreenBot extends PircBot
 			System.out.println(ex.getMessage());
 			ex.printStackTrace();
 		}
+	}
+
+	/*
+	 * Method handles word messages instead of explicit commands from
+	 * the user.
+	 */
+	private void handleWordMessage(String channel, String sender, String message, String[] args)
+	{
+		message = message.toLowerCase();
+		
+		if(message.contains("weather"))
+		{
+			long potentialZipcode;
+			
+	    	for(int i = 0; i < args.length; i++)
+	    	{
+	    		try
+	    		{
+	    			potentialZipcode = Long.parseUnsignedLong(removeSpecialCharacters(args[i]));
+	    			
+	    			//If valid parse, then print zipcode weather to user
+	    			try 
+	    			{
+	    				String zipToString = Long.toString(potentialZipcode);
+	    				
+	    				// Handles zipcodes beginning with 0
+	    				zipToString = (zipToString.length() == 4 ? "0" : "") + zipToString;
+	    				
+	    				String weatherDataString;
+	    				
+	    				String[] data = getRawWeatherDataByZipcode(zipToString);
+	    				
+	    				weatherDataString = "The sky in " + zipToString + " is " + data[0] + " and the max temperature is " + kelvinToFahrenheit(Double.parseDouble(data[1])) + 
+	    						"F while the minimum temperature is " + kelvinToFahrenheit(Double.parseDouble(data[2])) +
+	    						"F and the current temperature is " + kelvinToFahrenheit(Double.parseDouble(data[3])) + "F";
+	    				
+	    				sendMessageAndAppend(this.channel, weatherDataString);
+	    			} 
+	    			catch (Exception e) 
+	    			{
+	    				System.out.println(e.getMessage());
+	    			}
+	    		}
+	    		catch(Exception ex)
+	    		{
+	    			System.out.println("- Argument " + i + " is not a valid zipcode number");
+	    		}
+	    	}
+		}
+		else if(message.contains("representative"))
+		{
+			long potentialZipcode;
+			
+	    	for(int i = 0; i < args.length; i++)
+	    	{
+	    		try
+	    		{
+	    			// A potential zipcode to be used
+	    			potentialZipcode = Long.parseUnsignedLong(removeSpecialCharacters(args[i]));
+	    			
+	    			//If valid parse, then print zipcode weather to user
+	    			try 
+	    			{
+	    				String zipToString = Long.toString(potentialZipcode);
+	    				
+	    				// Handles zipcodes beginning with 0
+	    				zipToString = (zipToString.length() == 4 ? "0" : "") + zipToString;
+	    				        				
+	    				System.out.println(zipToString);
+	    				ArrayList<String> representativeDataArray = getRepresentativeDataByZipcode(zipToString);
+	    				String representativeDataString = "";
+	    				
+	    				// Construct return string to user
+	    				int num = 1;
+	    				for(int pos = 0; pos < representativeDataArray.size(); pos += 4)
+	    				{
+	    					representativeDataString += "Rep. " + num++ + " = { Name: " + representativeDataArray.get(pos);
+	    					representativeDataString += " / Party: " + representativeDataArray.get(pos + 1);
+	    					representativeDataString += " / Phone: " + representativeDataArray.get(pos + 2);
+	    					representativeDataString += " / Link: " + representativeDataArray.get(pos + 3) + " } ";
+	    				}
+	    				
+	    				sendMessageAndAppend(this.channel, representativeDataString);
+	    			} 
+	    			catch (Exception e) 
+	    			{
+	    				System.out.println(e.getMessage());
+	    			}
+	    		}
+	    		catch(Exception ex)
+	    		{
+	    			System.out.println("- Argument " + i + " is not a valid zipcode number");
+	    		}
+	    	}
+		}
+	}
+
+	// Iterative factorial: returns factorial of n
+	public long factorial(int n)
+	{
+		int product = 1;
+		
+		for(int i = n; i >= 1; i--)
+		{
+			product *= i;
+		}
+		
+		return product;
+	}
+
+	/*
+	 * Convert kelvin to fahrenheit
+	 * 
+	 * Parameter: double containing kelvin temperature
+	 */
+    double kelvinToFahrenheit(double kelvin)
+    {    	
+    	return Math.round(((kelvin - 273.15) * (9.0/5.0) + 32) * 100.0) / 100.0;
     }
-    
-    private String removeSpecialCharacters(String word)
+
+    /*
+     * Sends message and also appends to GUI interface
+     */
+	private void sendMessageAndAppend(String channel, String message)
+	{
+    	String time = new java.util.Date().toString();
+
+		sendMessage(channel, message);
+		guiInterface.appendToChat(time + " - " + this.getName() + ": " + message);
+	}
+	
+	/*
+	 * This method removes a special set of special characters from the 
+	 * string argument passed into it.
+	 */
+	private String removeSpecialCharacters(String word)
     {
     	String newString = "";
     	
@@ -765,97 +955,6 @@ public class BreenBot extends PircBot
     	}
     	
     	return newString;
-    }
-    
-    private void handleWordMessage(String channel, String sender, String message, String[] args)
-    {
-    	message = message.toLowerCase();
-    	
-    	if(message.contains("weather"))
-    	{
-    		long potentialZipcode;
-    		
-        	for(int i = 0; i < args.length; i++)
-        	{
-        		try
-        		{
-        			potentialZipcode = Long.parseUnsignedLong(removeSpecialCharacters(args[i]));
-        			
-        			//If valid parse, then print zipcode weather to user
-        			try 
-        			{
-        				String zipToString = Long.toString(potentialZipcode);
-        				
-        				// Handles zipcodes beginning with 0
-        				zipToString = (zipToString.length() == 4 ? "0" : "") + zipToString;
-        				
-        				String weatherDataString;
-        				
-        				String[] data = getRawWeatherDataByZipcode(zipToString);
-        				
-        				weatherDataString = "The sky in " + zipToString + " is " + data[0] + " and the max temperature is " + kelvinToFahrenheit(Double.parseDouble(data[1])) + 
-        						"F while the minimum temperature is " + kelvinToFahrenheit(Double.parseDouble(data[2])) +
-        						"F and the current temperature is " + kelvinToFahrenheit(Double.parseDouble(data[3])) + "F";
-        				
-        				sendMessageAndAppend(this.channel, weatherDataString);
-        			} 
-        			catch (Exception e) 
-        			{
-        				System.out.println(e.getMessage());
-        			}
-        		}
-        		catch(Exception ex)
-        		{
-        			System.out.println("- Argument " + i + " is not a valid zipcode number");
-        		}
-        	}
-    	}
-    	else if(message.contains("representative"))
-    	{
-    		long potentialZipcode;
-    		
-        	for(int i = 0; i < args.length; i++)
-        	{
-        		try
-        		{
-        			// A potential zipcode to be used
-        			potentialZipcode = Long.parseUnsignedLong(removeSpecialCharacters(args[i]));
-        			
-        			//If valid parse, then print zipcode weather to user
-        			try 
-        			{
-        				String zipToString = Long.toString(potentialZipcode);
-        				
-        				// Handles zipcodes beginning with 0
-        				zipToString = (zipToString.length() == 4 ? "0" : "") + zipToString;
-        				        				
-        				System.out.println(zipToString);
-        				ArrayList<String> representativeDataArray = getRepresentativeDataByZipcode(zipToString);
-        				String representativeDataString = "";
-        				
-        				// Construct return string to user
-        				int num = 1;
-        				for(int pos = 0; pos < representativeDataArray.size(); pos += 4)
-        				{
-        					representativeDataString += "Rep. " + num++ + " = { Name: " + representativeDataArray.get(pos);
-        					representativeDataString += " / Party: " + representativeDataArray.get(pos + 1);
-        					representativeDataString += " / Phone: " + representativeDataArray.get(pos + 2);
-        					representativeDataString += " / Link: " + representativeDataArray.get(pos + 3) + " } ";
-        				}
-        				
-        				sendMessageAndAppend(this.channel, representativeDataString);
-        			} 
-        			catch (Exception e) 
-        			{
-        				System.out.println(e.getMessage());
-        			}
-        		}
-        		catch(Exception ex)
-        		{
-        			System.out.println("- Argument " + i + " is not a valid zipcode number");
-        		}
-        	}
-    	}
     }
     
     protected void onDisconnect()

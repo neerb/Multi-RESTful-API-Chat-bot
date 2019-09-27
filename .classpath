@@ -8,5 +8,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="gson-2.7.jar"/>
 	<classpathentry kind="lib" path="pircbot.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Nathan/Desktop/2336 Project 1/Project-1-Final/twitter4j-core-4.0.7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
