@@ -7,6 +7,8 @@ Created by Nathan Breen(GitHub: neerb)
  
 BreenBot  
 
+[Link to freenode testing server](webchat.freenode.net)
+
 APIs Accessed:
  * 	-Twitter
  * 	-OpenWeather
