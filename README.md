@@ -25,6 +25,6 @@ Full Documentation of updates and pushes:
 
 
 Notes:
-While I am aware that it is frowned upon, the API keys are hard-coded into the scripts.
-This project was created to display the capabilies of accessing, reading, parsing, and displaying data for the user.
+* While I am aware that it is frowned upon, the API keys are hard-coded into the scripts.
+* This project was created to display the capabilies of accessing, reading, parsing, and displaying data for the user.
 
