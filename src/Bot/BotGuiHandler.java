@@ -67,7 +67,7 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		// Align bottom panel
 		panelBottom.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-		setTitle(mainBot.getName() + " - Admin Controls");
+		setTitle(mainBot.getName() + " - Admin Controls : Channel Name = " + mainBot.getCurrentChannel());
 		
 		// Set size of JFrame and set default close operation
 		setSize(width, height);
@@ -173,6 +173,9 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		verticalBar.setValue(verticalBar.getMaximum());
 	}
 	
+	/*
+	 * Sends message from Administrator to client
+	 */
 	private void sendAdminMessageFromField()
 	{
 		String time = new java.util.Date().toString();
@@ -292,6 +295,9 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		}
 	}
 
+	/*
+	 * Unused but necessary interface method
+	 */
 	@Override
 	public void keyTyped(KeyEvent e) 
 	{
@@ -307,6 +313,9 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 		}
 	}
 
+	/*
+	 * Unused but necessary interface method
+	 */
 	@Override
 	public void keyReleased(KeyEvent e) 
 	{

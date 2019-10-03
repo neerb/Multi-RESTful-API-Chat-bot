@@ -1,8 +1,23 @@
 /*
- * Created by Nathan Breen(neerb)
+ * Created by Nathan Breen(GitHub: neerb)
  * 
  * BreenBot 
- * ----Add description here
+ * 
+ * Server-side web-based client chat bot utilizing several information accessing APIs.
+ * 
+ * APIs Accessed:
+ * 	-Twitter
+ * 	-OpenWeather
+ * 	-ZipcodeAPI
+ * 	-Whoismyrepresentative
+ * 	-Cryptonator
+ * 	-ExchangeRateAPI
+ * 
+ * Clients connected to the freenode server are able to ping this bot
+ * and receive data back.  Many of the functions are done locally, though
+ * there are several that access the APIs listen above.
+ * 
+ * This project was done for CS2336 with Professor Khan
  */
 
 package Bot;
@@ -18,11 +33,6 @@ import org.jibble.pircbot.*;
 import twitter4j.*;
 import twitter4j.User;
 import twitter4j.conf.ConfigurationBuilder;
-
-// Get cryptocurrency data - cryptonator API - done
-// Currency Exchange rate - done
-
-// Organize methods by similarity - done
 
 public class BreenBot extends PircBot
 {
@@ -619,24 +629,16 @@ public class BreenBot extends PircBot
 					
 					// Get weather data
 					// Format: !weather <String: City Name("Dallas", "London", "Los Angeles">
-					if(getPrefixCommand(message).equalsIgnoreCase("!weather"))
+					if(getPrefixCommand(message).contains("weather"))
 					{
-						String city = "";
-						
-						for(int i = 0; i < args.length; i++)
-						{
-							city += args[i]  + (i < args.length - 1 ? " " : "");
-						}
-						
-						String weatherDataString = "";
-						
-						String[] data = getRawWeatherData(city);
-						
-						weatherDataString = "The weather in " + city + " is " + data[0] + " and the max temperature is " + kelvinToFahrenheit(Double.parseDouble(data[1])) + 
-								"F while the minimum temperature is " + kelvinToFahrenheit(Double.parseDouble(data[2])) +
-								"F and the current temperature is " + kelvinToFahrenheit(Double.parseDouble(data[3])) + "F";
-						
-						sendMessageAndAppend(channel, weatherDataString);
+						handleWordMessage(channel, sender, message, args);
+					}
+					
+					// Get representatives by zipcode
+					// Format: !representative(s) <zipcode>
+					if(getPrefixCommand(message).contains("representative"))
+					{
+						handleWordMessage(channel, sender, message, args);
 					}
 					
 					// Returns distance between two zip codes
