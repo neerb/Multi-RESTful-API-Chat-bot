@@ -3,13 +3,13 @@ Server-side web-based client chat bot utilizing several information accessing AP
 
 This is a project for CS2336 with Professor Khan.
 
-/*
  * Created by Nathan Breen(GitHub: neerb)
- * 
+ 
  * BreenBot 
- * 
+ 
+ 
  * Server-side web-based client chat bot utilizing several information accessing APIs.
- * 
+ 
  * APIs Accessed:
  * 	-Twitter
  * 	-OpenWeather
@@ -23,8 +23,6 @@ This is a project for CS2336 with Professor Khan.
  * there are several that access the APIs listen above.
  * 
  * This project was done for CS2336 with Professor Khan
- */
-
 
 Full Documentation of updates and pushes:
 --
