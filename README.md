@@ -3,14 +3,11 @@ Server-side web-based client chat bot utilizing several information accessing AP
 
 This is a project for CS2336 with Professor Khan.
 
- * Created by Nathan Breen(GitHub: neerb)
+Created by Nathan Breen(GitHub: neerb)
  
- * BreenBot 
- 
- 
- * Server-side web-based client chat bot utilizing several information accessing APIs.
- 
- * APIs Accessed:
+BreenBot  
+
+APIs Accessed:
  * 	-Twitter
  * 	-OpenWeather
  * 	-ZipcodeAPI
@@ -18,10 +15,7 @@ This is a project for CS2336 with Professor Khan.
  * 	-Cryptonator
  * 	-ExchangeRateAPI
  * 
- * Clients connected to the freenode server are able to ping this bot
- * and receive data back.  Many of the functions are done locally, though
- * there are several that access the APIs listen above.
- * 
+ * Clients connected to the freenode server are able to ping this bot and receive data back.  Many of the functions are done locally, though there are several that access the APIs listen above.
  * This project was done for CS2336 with Professor Khan
 
 Full Documentation of updates and pushes:
