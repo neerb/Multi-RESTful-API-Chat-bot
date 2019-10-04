@@ -11,6 +11,7 @@ BreenBot
 
 APIs Accessed:
  * 	-Twitter
+ *  -Alphavantage API
  * 	-OpenWeather
  * 	-ZipcodeAPI
  * 	-Whoismyrepresentative
