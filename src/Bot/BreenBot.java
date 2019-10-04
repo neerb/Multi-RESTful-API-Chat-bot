@@ -7,6 +7,7 @@
  * 
  * APIs Accessed:
  * 	-Twitter
+ * 	-Alphavantage API
  * 	-OpenWeather
  * 	-ZipcodeAPI
  * 	-Whoismyrepresentative
@@ -17,7 +18,7 @@
  * and receive data back.  Many of the functions are done locally, though
  * there are several that access the APIs listen above.
  * 
- * This project was done for CS2336 with Professor Khan
+ * This project was created for CS2336 with Professor Khan
  */
 
 package Bot;
@@ -25,7 +26,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 // External library imports
 import com.google.gson.*;
@@ -138,6 +142,68 @@ public class BreenBot extends PircBot
 		}
 		
 		return returnString;
+	}
+	
+	/*
+	 * This method uses the Alphavantage API to read JSON stock price data from a server.
+	 * Returns a string that contains information regarding the stock symbol argument.
+	 * 
+	 * Data:
+	 * 	Opening price
+	 * 	Closing price
+	 * 	High price
+	 * 	Low price
+	 * 
+	 */
+	String getStockData(String symbol) throws Exception
+	{
+		final String urlHalf1 = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=";
+		final String urlHalf2 = "&apikey=";
+		final String apiKey = "FKS0EU9E4K4UQDXI";
+		
+		String url = urlHalf1 + symbol + urlHalf2 + apiKey;
+				
+		JsonParser parser = new JsonParser();
+		
+		String hitUrl = url;
+		String jsonData = getJsonData(hitUrl);
+				
+		JsonElement jsonTree = parser.parse(jsonData);
+				
+		String returnData = "";
+		
+		if(jsonTree.isJsonObject())
+		{
+			JsonObject jsonObject = jsonTree.getAsJsonObject();
+			
+			JsonElement timeSeries = jsonObject.get("Time Series (Daily)");
+						
+			
+			if(timeSeries.isJsonObject())
+			{
+				JsonObject timeObject = timeSeries.getAsJsonObject();
+				
+				DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+				Date date = new Date();
+				JsonElement currentData = timeObject.get(format.format(date));
+				
+				if(currentData.isJsonObject())
+				{
+					JsonObject dataObject = currentData.getAsJsonObject();
+					
+					JsonElement openPrice = dataObject.get("1. open");
+					JsonElement closePrice = dataObject.get("4. close");
+					JsonElement highPrice = dataObject.get("2. high");
+					JsonElement lowPrice = dataObject.get("3. low");
+					
+					returnData = symbol + ": Opening price: $" + openPrice.getAsString() + " / Closing price: $" + closePrice.getAsString() +
+							" / High price: $" + highPrice.getAsString() + " / Low price: $" + lowPrice.getAsString();
+				}
+			}
+			
+		}
+		
+		return returnData;
 	}
 	
 	/*
@@ -525,6 +591,7 @@ public class BreenBot extends PircBot
 	private void sendHelpOperations()
 	{
 		sendMessageAndAppend(this.channel, "- Get most recent tweet by account name.  Use the explicit command: !getrecenttweet <screen name/twitter handle>");
+		sendMessageAndAppend(this.channel, "- Get daily stock data by symbol name(not case sensitive).  Use the explicit command: !stockdata <stock symbol>");
 		sendMessageAndAppend(this.channel, "- Weather data by zipcode or city name.  Use the explicit command: !weather <city name or zipcode> or just ask me something like: How's the weather in 75087?");
 		sendMessageAndAppend(this.channel, "- Cryptocurrency price data: !cprice <crypto symbol (BTC, ETH, etc...)>");
 		sendMessageAndAppend(this.channel, "- Exchange rates for any currency: !exchange <currency symbol (USD, JPY, MXN, etc...)>");
@@ -584,6 +651,7 @@ public class BreenBot extends PircBot
 	 * 
 	 * API calls:
 	 * 	!getrecenttweet <screen name/twitter handle>
+	 * 	!stockdata <stock symbol>
 	 * 	!weather <city name>
 	 * 	!distance <zipcode1> <zipcode2> <m or k>
 	 * 	!cprice	<cryptocurrency symbol>
@@ -625,6 +693,17 @@ public class BreenBot extends PircBot
 						String getTweet = getTwitterDataByUsername(getSearchName);
 						
 						sendMessageAndAppend(channel, getTweet);
+					}
+					
+					// Get stock price data by symbol
+					// Format: !stockdata <symbol>
+					if(getPrefixCommand(message).equalsIgnoreCase("!stockdata"))
+					{
+						String searchSymbol = args[0].toUpperCase();
+						
+						String stockData = getStockData(searchSymbol);
+						
+						sendMessageAndAppend(channel, stockData);
 					}
 					
 					// Get weather data
