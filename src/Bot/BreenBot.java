@@ -17,6 +17,7 @@
  * 	-Pokeapi
  * 	-Funtranslations (Dothraki)
  * 
+ * 
  * Clients connected to the freenode server are able to ping this bot
  * and receive data back.  Many of the functions are done locally, though
  * there are several that access the APIs listen above.
