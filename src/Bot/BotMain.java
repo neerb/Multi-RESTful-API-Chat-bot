@@ -11,7 +11,8 @@ public class BotMain
 		// Bot entry point
 		GetBotServerAndNamePrompt bot = new GetBotServerAndNamePrompt();
 		bot.reset();
-	
+		
+
 		// Shutdown hook
 		Runtime.getRuntime().addShutdownHook(new Thread()
 		{

@@ -1,7 +1,7 @@
 /*
  * Created by Nathan Breen(GitHub: neerb)
  * 
- * BreenBot 
+ * BreenBot - Multi-purpose bot relaying information based on user requests
  * 
  * Server-side web-based client chat bot utilizing several information accessing APIs.
  * 
@@ -13,6 +13,9 @@
  * 	-Whoismyrepresentative
  * 	-Cryptonator
  * 	-ExchangeRateAPI
+ *  -Open-notify ISS position
+ * 	-Pokeapi
+ * 	-Funtranslations (Dothraki)
  * 
  * Clients connected to the freenode server are able to ping this bot
  * and receive data back.  Many of the functions are done locally, though
@@ -22,14 +25,15 @@
  */
 
 package Bot;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 // External library imports
 import com.google.gson.*;
@@ -147,6 +151,7 @@ public class BreenBot extends PircBot
 	/*
 	 * This method uses the Alphavantage API to read JSON stock price data from a server.
 	 * Returns a string that contains information regarding the stock symbol argument.
+	 * Gets most recent closing price (market runs Monday-Friday)
 	 * 
 	 * Data:
 	 * 	Opening price
@@ -182,10 +187,28 @@ public class BreenBot extends PircBot
 			if(timeSeries.isJsonObject())
 			{
 				JsonObject timeObject = timeSeries.getAsJsonObject();
-				
-				DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+								
 				Date date = new Date();
-				JsonElement currentData = timeObject.get(format.format(date));
+								
+				Calendar calendar = new GregorianCalendar();
+				calendar.setTime(date);
+				
+				// Loop until we reach most recent Friday (market closes on Friday)
+				while(calendar.get(Calendar.DAY_OF_WEEK) < Calendar.FRIDAY || calendar.get(Calendar.DAY_OF_WEEK) > Calendar.FRIDAY)
+				{
+					calendar.add(Calendar.DAY_OF_MONTH, -1);
+				}
+				
+				int year = calendar.get(Calendar.YEAR);
+				int month = calendar.get(Calendar.MONTH) + 1;
+				int day = calendar.get(Calendar.DAY_OF_MONTH);
+				
+				String dayToString = Integer.toString(day);
+				
+				if(dayToString.length() == 1)
+					dayToString = "0" + dayToString;
+				
+				JsonElement currentData = timeObject.get(year + "-" + month + "-" + dayToString);
 				
 				if(currentData.isJsonObject())
 				{
@@ -196,7 +219,7 @@ public class BreenBot extends PircBot
 					JsonElement highPrice = dataObject.get("2. high");
 					JsonElement lowPrice = dataObject.get("3. low");
 					
-					returnData = symbol + ": Opening price: $" + openPrice.getAsString() + " / Closing price: $" + closePrice.getAsString() +
+					returnData = year + "-" + month + "-" + dayToString + " - " + symbol + ": Opening price: $" + openPrice.getAsString() + " / Closing price: $" + closePrice.getAsString() +
 							" / High price: $" + highPrice.getAsString() + " / Low price: $" + lowPrice.getAsString();
 				}
 			}
@@ -542,6 +565,116 @@ public class BreenBot extends PircBot
 	}
 	
 	/*
+	 * This method calls the open-notify API which
+	 * returns the current latitude and longitude of the
+	 * International Space Station.  
+	 * 
+	 */
+	String getISSLatitudeAndLongitude() throws Exception
+	{		
+		String url = "http://api.open-notify.org/iss-now.json";
+		
+		JsonParser parser = new JsonParser();
+		
+		String jsonData = getJsonData(url);
+				
+		JsonElement jsonTree = parser.parse(jsonData);
+		
+		String latAndLong = "";
+		
+		if(jsonTree.isJsonObject())
+		{
+			JsonObject treeObject = jsonTree.getAsJsonObject();
+			
+			JsonElement position = treeObject.get("iss_position");
+			
+			if(position.isJsonObject())
+			{
+				JsonObject contentsObject = position.getAsJsonObject();
+				
+				JsonElement latitude = contentsObject.get("latitude");
+				
+				latAndLong += "Latitude = " + latitude.getAsString();
+				
+				JsonElement longitude = contentsObject.get("longitude");
+				
+				latAndLong += "   Longitude = " + longitude.getAsString(); 
+			}
+		}
+		
+		return latAndLong;
+	}
+	
+	/*
+	 * This method calls the funtranslations api and converts
+	 * an english string argument to the Dothraki language
+	 * from the show "Game of Thrones".  
+	 * 
+	 * Returns Dothraki translation
+	 */
+	String translateEnglishToDothraki(String englishText) throws Exception
+	{		
+		String urlHalf1 = "https://api.funtranslations.com/translate/dothraki.json?text=";
+		String url = urlHalf1 + englishText;
+		
+		JsonParser parser = new JsonParser();
+		
+		String jsonData = getJsonData(url);
+				
+		JsonElement jsonTree = parser.parse(jsonData);
+		
+		String translation = "";
+		
+		if(jsonTree.isJsonObject())
+		{
+			JsonObject treeObject = jsonTree.getAsJsonObject();
+			
+			JsonElement contents = treeObject.get("contents");
+			
+			if(contents.isJsonObject())
+			{
+				JsonObject contentsObject = contents.getAsJsonObject();
+				
+				JsonElement translateElement = contentsObject.get("translated");
+				
+				translation = translateElement.getAsString();
+			}
+		}
+		
+		return translation;
+	}
+	
+	/*
+	 * This method requests a name of a pokemon from
+	 * the pokeapi and returns the name of a pokemon
+	 * based on its assigned number.
+	 */
+	String getPokemonByNumber(int number) throws Exception
+	{
+		String urlHalf1 = "https://pokeapi.co/api/v2/pokemon-form/";
+		String url = urlHalf1 + number;
+		
+		JsonParser parser = new JsonParser();
+		
+		String jsonData = getJsonData(url);
+				
+		JsonElement jsonTree = parser.parse(jsonData);
+		
+		String pokemonName = "";
+		
+		if(jsonTree.isJsonObject())
+		{
+			JsonObject treeObject = jsonTree.getAsJsonObject();
+			
+			JsonElement name = treeObject.get("name");
+			
+			pokemonName = name.getAsString();
+		}
+		
+		return pokemonName;
+	}
+	
+	/*
 	 * This method opens a url stream and requests the data from
 	 * a specified URL.  The data that is returned from this is
 	 * ideally Json objects, but it will also return whatever
@@ -590,19 +723,32 @@ public class BreenBot extends PircBot
 	 */
 	private void sendHelpOperations()
 	{
+		/*** API Calls ***/
 		sendMessageAndAppend(this.channel, "- Get most recent tweet by account name.  Use the explicit command: !getrecenttweet <screen name/twitter handle>");
-		sendMessageAndAppend(this.channel, "- Get daily stock data by symbol name(not case sensitive).  Use the explicit command: !stockdata <stock symbol>");
-		sendMessageAndAppend(this.channel, "- Weather data by zipcode or city name.  Use the explicit command: !weather <city name or zipcode> or just ask me something like: How's the weather in 75087?");
+		sendMessageAndAppend(this.channel, "- Get most recent daily(Monday-Friday) stock data by symbol name(not case sensitive).  Use the explicit command: !stockdata <stock symbol>");
+		sendMessageAndAppend(this.channel, "- Weather data by zipcode or city name.  Use the explicit command: !weathercity <city name> or just ask me something like: How's the weather in 75087?");
 		sendMessageAndAppend(this.channel, "- Cryptocurrency price data: !cprice <crypto symbol (BTC, ETH, etc...)>");
 		sendMessageAndAppend(this.channel, "- Exchange rates for any currency: !exchange <currency symbol (USD, JPY, MXN, etc...)>");
 		sendMessageAndAppend(this.channel, "- State/city government representatives by zipcode: !representatives <zipcode> or just ask me something like: Who are the representatives for 01002?");
 		sendMessageAndAppend(this.channel, "- Get distance between two zip codes in miles or kilometers: !distance <zipcode 1> <zipcode 2> <m or k>");
+		sendMessageAndAppend(this.channel, "- Get current coordinates of the International Space Station: !iss");
+		sendMessageAndAppend(this.channel, "- Find the name of a pokemon by its ID number: !pokefind <pokemon ID number>");
+		sendMessageAndAppend(this.channel, "- Translate English to Dothraki: !dothraki <English sentence to be translated>");
+		///
+		
+		
+		/*** Math functions ***/
 		sendMessageAndAppend(this.channel, "- Multiply a list of numbers: !multiply <num1> <num2> <num3> ... <num N>");
 		sendMessageAndAppend(this.channel, "- Apply factorial on a number: !factorial <number>");
 		sendMessageAndAppend(this.channel, "- Calculate exponential: !ex <base> <exponent>");
+		///
+		
+		
+		/*** Miscellaneous ***/
 		sendMessageAndAppend(this.channel, "- Change my nickname: !changenick <new nickname>");
 		sendMessageAndAppend(this.channel, "- Get the current time: !time");
 		sendMessageAndAppend(this.channel, "- Ping the bot: !ping");
+		///
 	}
 	
 	// This function is called upon the bot connecting to the channel
@@ -652,11 +798,14 @@ public class BreenBot extends PircBot
 	 * API calls:
 	 * 	!getrecenttweet <screen name/twitter handle>
 	 * 	!stockdata <stock symbol>
-	 * 	!weather <city name>
+	 * 	!weathercity <city name>
 	 * 	!distance <zipcode1> <zipcode2> <m or k>
 	 * 	!cprice	<cryptocurrency symbol>
 	 * 	!exchange <currency symbol>
 	 * 	!representative <zipcode>
+	 * 	!iss
+	 * 	!pokefind <ID number of pokemon>
+	 * 	!dothraki <String of English text to be converted>
 	 * 
 	 * Math functions:
 	 * 	!ex
@@ -707,10 +856,31 @@ public class BreenBot extends PircBot
 					}
 					
 					// Get weather data
-					// Format: !weather <String: City Name("Dallas", "London", "Los Angeles">
+					// Format: !weathercity <String: City Name("Dallas", "London", "Los Angeles">
+					// Secondary Format: "How's the weather in 75080?"
 					if(getPrefixCommand(message).contains("weather"))
 					{
-						handleWordMessage(channel, sender, message, args);
+						if(getPrefixCommand(message).equalsIgnoreCase("!weathercity"))
+						{
+		    				String cityName = "";
+		    				
+							for(int i = 0; i < args.length; i++)
+							{
+								cityName += args[i] + ((i < args.length - 1) ? " " : "");
+							}
+		    				
+		    				String weatherDataString;
+		    				
+		    				String[] data = getRawWeatherData(cityName);
+		    				
+		    				weatherDataString = "The weather in " + cityName + " is " + data[0] + " and the max temperature is " + kelvinToFahrenheit(Double.parseDouble(data[1])) + 
+		    						"F while the minimum temperature is " + kelvinToFahrenheit(Double.parseDouble(data[2])) +
+		    						"F and the current temperature is " + kelvinToFahrenheit(Double.parseDouble(data[3])) + "F";
+		    				
+		    				sendMessageAndAppend(this.channel, weatherDataString);
+						}
+						else
+							handleWordMessage(channel, sender, message, args);
 					}
 					
 					// Get representatives by zipcode
@@ -755,6 +925,8 @@ public class BreenBot extends PircBot
 						}
 					}
 	
+					// Gets exchange rates for any currency
+					// Format: !exchange <currency symbol>
 					if(getPrefixCommand(message).equalsIgnoreCase("!exchange"))
 					{
 						String symbol = args[0];
@@ -762,6 +934,41 @@ public class BreenBot extends PircBot
 						
 	
 						sendMessageAndAppend(channel, "Exchange rates for " + symbol + " are: " + getExchangeRates(symbol));
+					}
+					
+					// Gets current position of ISS
+					// Format: !iss
+					if(getPrefixCommand(message).equalsIgnoreCase("!iss"))
+					{
+						sendMessageAndAppend(channel, "ISS current coordinates are: " + getISSLatitudeAndLongitude());
+					}
+					
+					// Get the name of pokemon from their assigned ID number
+					// Format: !pokefind <number of pokemon>
+					if(getPrefixCommand(message).equalsIgnoreCase("!pokefind"))
+					{
+						int idNum = Integer.parseInt(args[0]);
+						
+						String pokemonName = getPokemonByNumber(idNum);
+						
+						sendMessageAndAppend(channel, "Pokemon #" + idNum + " is named " + pokemonName);
+					}
+					
+					// Convert English to Dothraki
+					// Format: !dothraki <String in English to be translated>
+					if(getPrefixCommand(message).equalsIgnoreCase("!dothraki"))
+					{
+						String englishText = "";
+						String dothrakiTranslation;
+						
+						for(int i = 0; i < args.length; i++)
+						{
+							englishText += args[i] + ((i < args.length - 1) ? "%20" : "");
+						}
+							
+						dothrakiTranslation = translateEnglishToDothraki(englishText);
+						
+						sendMessageAndAppend(channel, "Dothraki translation: " + dothrakiTranslation);
 					}
 					/// API call commands end
 					
