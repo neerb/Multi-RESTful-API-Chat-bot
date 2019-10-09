@@ -766,11 +766,17 @@ public class BreenBot extends PircBot
 	 * 
 	 * Current command list:
 	 * 
-	 * API calls: !getrecenttweet <screen name/twitter handle> !stockdata <stock
-	 * symbol> !weathercity <city name> !distance <zipcode1> <zipcode2> <m or k>
-	 * !cprice <cryptocurrency symbol> !exchange <currency symbol> !representative
-	 * <zipcode> !iss !pokefind <ID number of pokemon> !dothraki <String of English
-	 * text to be converted>
+	 * API calls: 
+	 * !getrecenttweet <screen name/twitter handle> 
+	 * !stockdata <stock symbol> 
+	 * !weathercity <city name>
+	 * !distance <zipcode1> <zipcode2> <m or k>
+	 * !cprice <cryptocurrency symbol>
+	 * !exchange <currency symbol> 
+	 * !representative <zipcode> 
+	 * !iss 
+	 * !pokefind <ID number of pokemon> 
+	 * !dothraki <String of English text to be converted>
 	 * 
 	 * Math functions: !ex !multiply !factorial
 	 * 
@@ -1059,15 +1065,16 @@ public class BreenBot extends PircBot
 			{
 				try
 				{
-					potentialZipcode = Long.parseUnsignedLong(removeSpecialCharacters(args[i]));
+					potentialZipcode = Long.parseLong(removeSpecialCharacters(args[i]));
 
 					// If valid parse, then print zipcode weather to user
 					try
 					{
 						String zipToString = Long.toString(potentialZipcode);
 
-						// Handles zipcodes beginning with 0
-						zipToString = (zipToString.length() == 4 ? "0" : "") + zipToString;
+						// Handles zipcodes beginning with 0	
+						while(zipToString.length() < 5)
+							zipToString = "0" + zipToString;
 
 						String weatherDataString;
 
@@ -1102,7 +1109,7 @@ public class BreenBot extends PircBot
 				try
 				{
 					// A potential zipcode to be used
-					potentialZipcode = Long.parseUnsignedLong(removeSpecialCharacters(args[i]));
+					potentialZipcode = Long.parseLong(removeSpecialCharacters(args[i]));
 
 					// If valid parse, then print zipcode weather to user
 					try
@@ -1110,7 +1117,8 @@ public class BreenBot extends PircBot
 						String zipToString = Long.toString(potentialZipcode);
 
 						// Handles zipcodes beginning with 0
-						zipToString = (zipToString.length() == 4 ? "0" : "") + zipToString;
+						while(zipToString.length() < 5)
+							zipToString = "0" + zipToString;
 
 						System.out.println(zipToString);
 						ArrayList<String> representativeDataArray = getRepresentativeDataByZipcode(zipToString);
