@@ -42,7 +42,7 @@ public class GetBotServerAndNamePrompt extends JFrame implements ActionListener
 		labelChannel = new JLabel("Server ID (begins with #):");
 
 		channelName = new JTextField();
-		channelName.setText("#testServer0100");
+		channelName.setText("#BreenChannelDefault");
 
 		submit = new JButton();
 		submit.setText("Create new bot");
