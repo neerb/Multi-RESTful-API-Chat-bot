@@ -1,0 +1,27 @@
+Steps to using the BreenBot GUI and commands.
+
+1. A window requesting you to enter the name of the Bot and the Channel will prompt you
+2. Once you have entered a name and channel into the data fields, click on the "Create new bot" button at the bottom
+3. A new window will open and tell you the initialization process has started.  This means that the bot is waiting
+   for you to connect it to the freenode server.
+4. Click the "Connect" button and wait for the controls to become enabled for use.
+5. The text area above the buttons is a live feed of every message that comes through the channel.  It will automatically scroll
+   to the bottom for each message received.
+
+BUTTONS AND THEIR OPERATIONS:
+-"Send Administrator Message" - Gets string from text field to the left of it and sends it to the freenode server via the bot.
+-"Save this chat log" - Allows the user to save the text from the chatlog for the session, appends date and time of save
+
+ENABLE AND DISABLE COMMANDS:
+-"Enable commands" checkbox allows the admin to enable and disable whether or not they are currently taking commands from the user.
+
+CONNECT AND DISCONNECT BUTTON:
+-When the bot is connected, the button will be green and a string of text above it will say "Bot Status: Connected"
+-When the bot is disconnected, the button will be red and a string of text above it will say "Bot Status: Disconnected"
+
+ERROR HANDLING:
+If an error occurs during bot connection or initialization, a MessageBox will appear informing you of what issue has occured.
+
+Closing notes:
+-When finished using the bot, use the close window button to end the program.  The program will automatically disconnect from the
+ server when exited.
