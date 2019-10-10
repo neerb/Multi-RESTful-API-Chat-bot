@@ -255,7 +255,6 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 			try
 			{
 				saveLogData();
-				this.appendToChat("- Chat log saved");
 			}
 			catch (Exception ex)
 			{
@@ -290,6 +289,8 @@ public class BotGuiHandler extends JFrame implements ActionListener, KeyListener
 			chatData.write(fw);
 
 			fw.close();
+			
+			this.appendToChat("- Chat log saved");
 		}
 	}
 

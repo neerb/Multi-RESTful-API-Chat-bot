@@ -109,6 +109,8 @@ public class GetBotServerAndNamePrompt extends JFrame implements ActionListener
 					String name = botName.getText();
 					String channel = channelName.getText();
 					String server = "orwell.freenode.net";
+					
+					channel = (channel.charAt(0) != '#' ? "#" : "") + channel;
 
 					this.bot = new BreenBot(name, channel, server);
 					this.guiInterface = new BotGuiHandler(this.bot, this);
