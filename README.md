@@ -23,8 +23,6 @@ APIs Accessed:
  -
  -
  * Clients connected to the freenode server are able to ping this bot and receive data back.  Many of the functions are done locally, though there are several that access the APIs listed above.
- * This project was done for CS2336 with Professor Khan
-
 
 Closing notes:
 * While I am aware that it is against convention, the API keys are hard-coded into the scripts.
