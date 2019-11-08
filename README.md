@@ -1,4 +1,4 @@
-# Project-1-Final
+# Multi-RESTful-API Chat bot / Project-1-Final
 Server-side web-based client chat bot utilizing several information accessing APIs.
 
 This is a project for CS2336 with Professor Khan.
